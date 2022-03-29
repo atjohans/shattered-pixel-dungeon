@@ -1,6 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.utils.speechRecognition;
 
-import com.shatteredpixel.shatteredpixeldungeon.utils.speechSynthesis.StringChangeListener;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,7 @@ import java.util.List;
 public class SpeechRecognitionHandler {
 
     private List<SpeechRecognitionListener> listeners;
+
 
     public SpeechRecognitionHandler(){
         listeners = new ArrayList<SpeechRecognitionListener>();
@@ -18,8 +19,12 @@ public class SpeechRecognitionHandler {
     }
 
     public void dispatchListenEvent(){
-        for (SpeechRecognitionListener l : listeners) {
-            l.execute();
+        if (!StateReader.busy) {
+            for (SpeechRecognitionListener l : listeners) {
+                    l.execute();
+
+            }
         }
     }
+
 }

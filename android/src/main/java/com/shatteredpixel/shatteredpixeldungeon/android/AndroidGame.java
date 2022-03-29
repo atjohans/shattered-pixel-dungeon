@@ -35,7 +35,6 @@ import android.util.Log;
 import android.view.ViewConfiguration;
 import android.widget.Toast;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
@@ -49,7 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.UpdateImpl;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.utils.speechRecognition.SpeechRecognitionListener;
-import com.shatteredpixel.shatteredpixeldungeon.utils.state_reading.State.StateReader;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.ui.Button;
 import com.watabou.utils.FileUtils;
@@ -57,57 +56,67 @@ import com.watabou.utils.FileUtils;
 import java.util.ArrayList;
 
 public class AndroidGame extends AndroidApplication implements RecognitionListener {
-	
+
 	public static AndroidApplication instance;
-	
+
 	private static AndroidPlatformSupport support;
 
 	public static SpeechEventListenerAndroid speechEventListenerAndroid;
 
-	SpeechRecognitionListener speechRecognitionListener;
+	public static SpeechRecognitionListener recognitionListener;
 
-	static final int REQUEST_RECORD_PERMISSION = 100;
-	SpeechRecognizer speechRecognizer = null;
-	Intent recognizerIntent;
+
+	//Speech Recognition
+	private SpeechRecognizer speechRecognizer = null;
+	private Intent recognizerIntent;
+	private String LOG_TAG = "VoiceRecognitionActivity";
+	private static final int REQUEST_RECORD_PERMISSION = 100;
+
+	private AndroidGame ref = this;
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 
+		//-------SPEECH_RECOGNITION-------
+		this.requestPermissions ( new String[]{Manifest.permission.RECORD_AUDIO},
+				REQUEST_RECORD_PERMISSION);
 
-		//Speech Stuff
+		recognitionListener = new SpeechRecognitionListener() {
+
+			Runnable listenStarter = new Runnable() {
+				@Override
+				public void run() {
+					speechRecognizer = SpeechRecognizer.createSpeechRecognizer(ref);
+					Log.i(LOG_TAG, "Recognition Available: " + SpeechRecognizer.isRecognitionAvailable(ref));
+					speechRecognizer.setRecognitionListener(ref);
+					speechRecognizer.startListening(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH));
+					StateReader.busy = true;
+				}
+			};
+
+			@Override
+			public void execute() {
+				runOnUiThread(listenStarter);
+			}
+
+
+
+
+		};
+		StateReader.speechRecognitionHandler.addSpeechRecognitionListener(recognitionListener);
+
+
+		//--------------------------------
+
+
+		//----------Speech Synthesis-----------
 		speechEventListenerAndroid = new SpeechEventListenerAndroid(getApplicationContext());
 		//speechEventHandler collects Listeners that fire when an event occurs
 		StateReader.speechEventHandler.addStringChangeListener(speechEventListenerAndroid.listener);
+		//-------------------------------------
 
-
-		//speech recognizer
-		speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.getApplicationContext());
-		speechRecognizer.setRecognitionListener(this);
-		recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"US-en");
-		recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-		this.requestPermissions( new String[]{Manifest.permission.RECORD_AUDIO},
-				REQUEST_RECORD_PERMISSION);
-
-
-		speechRecognitionListener = new SpeechRecognitionListener() {
-
-			Runnable runner = new Runnable() {
-				@Override
-				public void run() {
-					speechRecognizer.startListening(recognizerIntent);
-				}
-			};
-			@Override
-			public void execute() {
-				runOnUiThread(runner);
-			}
-		};
-
-		StateReader.speechRecognitionHandler.addSpeechRecognitionListener(speechRecognitionListener);
 
 		//there are some things we only need to set up on first launch
 		if (instance == null) {
@@ -143,14 +152,14 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 		} else {
 			instance = this;
 		}
-		
+
 		//set desired orientation (if it exists) before initializing the app.
 		if (SPDSettings.landscape() != null) {
 			instance.setRequestedOrientation( SPDSettings.landscape() ?
 					ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE :
 					ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT );
 		}
-		
+
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 		config.depth = 0;
 		if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
@@ -159,109 +168,22 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 			config.g = 6;
 			config.b = 5;
 		}
-		
+
 		config.useCompass = false;
 		config.useAccelerometer = false;
-		
+
 		if (support == null) support = new AndroidPlatformSupport();
 		else                 support.reloadGenerators();
-		
+
 		support.updateSystemUI();
 
 		Button.longClick = ViewConfiguration.getLongPressTimeout()/1000f;
-		
+
 		initialize(new ShatteredPixelDungeon(support), config);
-		
-	}
-
-
-
-
-	@Override
-	public AndroidAudio createAudio(Context context, AndroidApplicationConfiguration config) {
-		return new AsynchronousAndroidAudio(context, config);
-	}
-
-
-	@Override
-	protected void onResume() {
-		//prevents weird rare cases where the app is running twice
-		if (instance != this){
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-				finishAndRemoveTask();
-			} else {
-				finish();
-			}
-		}
-		super.onResume();
-	}
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-	@Override
-	protected void onStop() {
-		super.onStop();
-		if (speechRecognizer != null) {
-			speechRecognizer.destroy();
-			Log.i(this.toString(), "destroy");
-		}
-	}
-	@Override
-	public void onReadyForSpeech(Bundle bundle) {
-		Log.i("onReadyForSpeech", "onReadyForSpeech");
 
 	}
 
-	@Override
-	public void onBeginningOfSpeech() {
-		Log.i("onBeginningOfSpeech", "onBeginningOfSpeech");
-
-	}
-
-	@Override
-	public void onRmsChanged(float v) {
-
-	}
-
-	@Override
-	public void onBufferReceived(byte[] bytes) {
-
-	}
-
-	@Override
-	public void onEndOfSpeech() {
-
-
-	}
-
-	@Override
-	public void onError(int i) {
-
-	}
-
-	@Override
-	public void onResults(Bundle results) {
-		Log.i("onResults", "onResults");
-		ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-		String text = "";
-		for (String result : matches)
-			text = result + "\n";
-
-		StateReader.setCommand(text);
-
-	}
-
-	@Override
-	public void onPartialResults(Bundle bundle) {
-
-	}
-
-	@Override
-	public void onEvent(int i, Bundle bundle) {
-
-	}
-
+	//-------Speech Recognition--------
 	@Override
 	public void onRequestPermissionsResult(int requestCode,  String[] permissions,  int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -276,6 +198,127 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 	}
 
 	@Override
+	public void onReadyForSpeech(Bundle bundle) {
+
+		Log.i(LOG_TAG, "OnReadyForSpeech");
+	}
+
+	@Override
+	public void onBeginningOfSpeech() {
+		Log.i(LOG_TAG, "onBeginningOfSpeech");
+		StateReader.busy = true;
+	}
+
+	@Override
+	public void onRmsChanged(float v) {
+
+		Log.i(LOG_TAG, "onRmsChanged: " + v);
+	}
+
+	@Override
+	public void onBufferReceived(byte[] bytes) {
+
+		Log.i(LOG_TAG, "OnBufferReceived");
+	}
+
+	@Override
+	public void onEndOfSpeech() {
+
+		Log.i(LOG_TAG, "OnEndOfSpeech");
+	}
+
+	@Override
+	public void onError(int errorCode) {
+
+		Log.i(LOG_TAG, "OnError");
+		String message;
+		switch (errorCode) {
+			case SpeechRecognizer.ERROR_AUDIO:
+				message = "Audio recording error";
+				break;
+			case SpeechRecognizer.ERROR_CLIENT:
+				message = "Client side error";
+				break;
+			case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+				message = "Insufficient permissions";
+				break;
+			case SpeechRecognizer.ERROR_NETWORK:
+				message = "Network error";
+				break;
+			case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+				message = "Network timeout";
+				break;
+			case SpeechRecognizer.ERROR_NO_MATCH:
+				message = "No match";
+				break;
+			case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+				message = "RecognitionService busy";
+				break;
+			case SpeechRecognizer.ERROR_SERVER:
+				message = "error from server";
+				break;
+			case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+				message = "No speech input";
+				break;
+			default:
+				message = "Didn't understand, please try again.";
+				break;
+		}
+		speechRecognizer.stopListening();
+		speechRecognizer.destroy();
+		StateReader.busy = false;
+
+		StateReader.speechRecognitionHandler.dispatchListenEvent();
+		Log.e(LOG_TAG,message);
+	}
+
+	@Override
+	public void onResults(Bundle results) {
+
+		speechRecognizer.stopListening();
+		Log.i(LOG_TAG, "onResults");
+		ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+		String text = "";
+		for (String result : matches)
+			text = result + "\n";
+		//StateReader.speechEventHandler.setMsg(text);
+		StateReader.busy = false;
+		speechRecognizer.stopListening();
+		speechRecognizer.destroy();
+		StateReader.handleCommand(text);
+	}
+
+	@Override
+	public void onPartialResults(Bundle bundle) {
+		Log.i(LOG_TAG, "OnPartialResults");
+		//speechRecognizer.stopListening();
+		//StateReader.busy = false;
+
+	}
+
+	@Override
+	public void onEvent(int i, Bundle bundle) {
+
+	}
+
+	@Override
+	public void onStop(){
+		super.onStop();
+		StateReader.busy = false;
+		if (speechRecognizer != null) {
+			speechRecognizer.destroy();
+			Log.i(LOG_TAG, "destroy");
+		}
+	}
+	//--------------------------------
+
+
+	@Override
+	public AndroidAudio createAudio(Context context, AndroidApplicationConfiguration config) {
+		return new AsynchronousAndroidAudio(context, config);
+	}
+
+	@Override
 	public void onBackPressed() {
 		//do nothing, game should catch all back presses
 	}
@@ -285,7 +328,7 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 		super.onWindowFocusChanged(hasFocus);
 		support.updateSystemUI();
 	}
-	
+
 	@Override
 	public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
 		super.onMultiWindowModeChanged(isInMultiWindowMode);
@@ -293,4 +336,4 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 	}
 
 
-}
+	}

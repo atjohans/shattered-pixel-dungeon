@@ -456,10 +456,15 @@ public abstract class Level implements Bundlable {
 			mobsToSpawn = Bestiary.getMobRotation(Dungeon.depth);
 		}
 
+
+
 		Mob m = Reflection.newInstance(mobsToSpawn.remove(0));
 		if (Dungeon.isChallenged(Challenges.CHAMPION_ENEMIES)){
 			ChampionEnemy.rollForChampion(m);
 		}
+
+
+
 		return m;
 	}
 

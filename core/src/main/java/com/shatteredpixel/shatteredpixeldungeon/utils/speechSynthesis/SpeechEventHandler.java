@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class SpeechEventHandler implements StringChangeDispatcher {
 
     private String msg;
+    private String lastMsg;
     private List<StringChangeListener> listeners;
 
     public SpeechEventHandler(String initialFlagState) {
@@ -20,11 +21,17 @@ public class SpeechEventHandler implements StringChangeDispatcher {
 
     @Override
     public void setMsg(String msg) {
-        if (this.msg != msg) {
-            this.msg = msg;
-            dispatchEvent();
-        }
+        this.msg = msg;
+        dispatchEvent();
+        this.lastMsg = msg;
+        this.msg = "";
     }
+
+    public void speakLast(){
+        this.msg = lastMsg;
+        dispatchEvent();
+    }
+
 
     @Override
     public String getMsg() {

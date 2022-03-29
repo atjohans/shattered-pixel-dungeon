@@ -147,7 +147,7 @@ public class GameScene extends PixelScene {
 	private BusyIndicator busy;
 	private CircleArc counter;
 	
-	private static CellSelector cellSelector;
+	public static CellSelector cellSelector;
 	
 	private Group terrain;
 	private Group customTiles;

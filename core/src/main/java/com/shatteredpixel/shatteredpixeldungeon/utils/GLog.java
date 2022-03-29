@@ -21,8 +21,9 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.utils;
 
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.utils.state_reading.State.StateReader;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Signal;
 
@@ -52,8 +53,9 @@ public class GLog {
 		
 		DeviceCompat.log( TAG, text );
 		update.dispatch( text );
-		StateReader.speechEventHandler.setMsg(text);
-		StateReader.speechRecognitionHandler.dispatchListenEvent();
+		if (ShatteredPixelDungeon.isAccessibilityMode)
+			StateReader.speechEventHandler.setMsg(text);
+
 	}
 	
 	public static void p( String text, Object... args ) {

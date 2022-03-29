@@ -843,12 +843,19 @@ public abstract class Mob extends Char {
 	}
 
 	public interface AiState {
+
 		boolean act( boolean enemyInFOV, boolean justAlerted );
+		String getTag();
 	}
 
 	protected class Sleeping implements AiState {
 
 		public static final String TAG	= "SLEEPING";
+
+		@Override
+		public String getTag() {
+			return TAG;
+		}
 
 		@Override
 		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
@@ -914,6 +921,11 @@ public abstract class Mob extends Char {
 		public static final String TAG	= "WANDERING";
 
 		@Override
+		public String getTag() {
+			return TAG;
+		}
+
+		@Override
 		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
 			if (enemyInFOV && (justAlerted || Random.Float( distance( enemy ) / 2f + enemy.stealth() ) < 1)) {
 
@@ -967,6 +979,11 @@ public abstract class Mob extends Char {
 	protected class Hunting implements AiState {
 
 		public static final String TAG	= "HUNTING";
+
+		@Override
+		public String getTag() {
+			return TAG;
+		}
 
 		//prevents rare infinite loop cases
 		private boolean recursing = false;
@@ -1031,6 +1048,11 @@ public abstract class Mob extends Char {
 		public static final String TAG	= "FLEEING";
 
 		@Override
+		public String getTag() {
+			return TAG;
+		}
+
+		@Override
 		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
 			enemySeen = enemyInFOV;
 			//loses target when 0-dist rolls a 6 or greater.
@@ -1062,6 +1084,11 @@ public abstract class Mob extends Char {
 	}
 
 	protected class Passive implements AiState {
+
+		@Override
+		public String getTag() {
+			return TAG;
+		}
 
 		public static final String TAG	= "PASSIVE";
 
