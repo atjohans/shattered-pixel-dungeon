@@ -53,11 +53,19 @@ public class CellSelector extends ScrollArea {
 
     private float dragThreshold;
 
+    private float swipeThreshold;
+
+    private float directionThreshold;
+
     public CellSelector(DungeonTilemap map) {
         super(map);
         camera = map.camera();
 
         dragThreshold = PixelScene.defaultZoom * DungeonTilemap.SIZE / 2;
+
+        swipeThreshold = PixelScene.defaultZoom * DungeonTilemap.SIZE * 2;
+
+        directionThreshold = PixelScene.defaultZoom * DungeonTilemap.SIZE/ 2;
 
         mouseZoom = camera.zoom;
         KeyEvent.addKeyListener(keyListener);
@@ -102,44 +110,51 @@ public class CellSelector extends ScrollArea {
             StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
             StateReader.speechRecognitionHandler.dispatchListenEvent();
             StateReader.busy = true;
+        }else{
+            StateReader.speechRecognitionHandler.dispatchKillEvent();
+            StateReader.busy= false;
         }
     }
 
     @Override
     protected void onClick(PointerEvent event) {
         if (ShatteredPixelDungeon.isAccessibilityMode) {
-            if (hasClicked) {
-                hasClickedTwice = true;
-            } else {
-                hasClicked = true;
+            if (dragging) {
+
+                dragging = false;
+
+            }else {
+                if (hasClicked) {
+                    hasClickedTwice = true;
+                } else {
+                    hasClicked = true;
+                }
+                new java.util.Timer().schedule(
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+
+                                if (hasClicked && !hasClickedTwice) {
+                                    onSingleClick();
+                                    hasClicked = false;
+                                    hasClickedTwice = false;
+                                    return;
+                                }
+
+                                if (hasClicked && hasClickedTwice) {
+
+                                    onDoubleClick();
+                                    hasClicked = false;
+                                    hasClickedTwice = false;
+                                    return;
+                                }
+                            }
+                        },
+                        250
+                );
+
+
             }
-            new java.util.Timer().schedule(
-                    new java.util.TimerTask() {
-                        @Override
-                        public void run() {
-
-                            if (hasClicked && !hasClickedTwice) {
-                                onSingleClick();
-                                hasClicked = false;
-                                hasClickedTwice = false;
-                                return;
-                            }
-
-                            if (hasClicked && hasClickedTwice) {
-
-                                onDoubleClick();
-                                hasClicked = false;
-                                hasClickedTwice = false;
-                                return;
-                            }
-                        }
-                    },
-                    250
-            );
-
-
-
-
 
         } else {
             if (dragging) {
@@ -254,6 +269,9 @@ public class CellSelector extends ScrollArea {
 
     @Override
     protected void onPointerUp(PointerEvent event) {
+        if (justDragged){
+            justDragged = false;
+        }
         if (pinching && (event == curEvent || event == another)) {
 
             pinching = false;
@@ -271,29 +289,112 @@ public class CellSelector extends ScrollArea {
 
     private boolean dragging = false;
     private PointF lastPos = new PointF();
+    private PointF startPos = new PointF();
+    private boolean justDragged = false;
+
+    private String determineSwipeDirection(PointF start, PointF end){
+
+
+        float yDiff = Math.abs(end.y - start.y);
+        float xDiff = Math.abs(end.x-start.x);
+
+            if (xDiff >= swipeThreshold && yDiff < swipeThreshold){
+
+                if (start.x < end.x){
+                    return "East ";
+                }else{
+                    return "West ";
+                }
+
+
+            }else if(xDiff < swipeThreshold && yDiff >= swipeThreshold){
+
+                if (start.y > end.y){
+                    return "north ";
+                }else{
+                    return "south ";
+                }
+
+            }
+            else if(xDiff >= swipeThreshold/2 && yDiff >= swipeThreshold/2){
+
+                if (start.y < end.y && start.x < end.x){
+                    return "southeast ";
+                }else if (start.y < end.y && start.x > end.x){
+                    return "southwest ";
+                }if (start.y > end.y && start.x < end.x){
+                    return "northeast ";
+                }if (start.y > end.y && start.x > end.x){
+                    return "northwest ";
+                }
+            }
+
+        return null;
+
+    }
+    protected void onSwipe(){
+        System.out.println("SWIPE");
+
+        String direction = determineSwipeDirection(startPos,lastPos);
+
+        if(direction != null){
+            CommandMapper.mapCommand(direction);
+        }
+
+
+    }
 
     @Override
     protected void onDrag(PointerEvent event) {
 
-        if (pinching) {
-
-            float curSpan = PointF.distance(curEvent.current, another.current);
-            float zoom = (startZoom * curSpan / startSpan);
-            camera.zoom(GameMath.gate(
-                    PixelScene.minZoom,
-                    zoom - (zoom % 0.1f),
-                    PixelScene.maxZoom));
-
-        } else {
+        if (ShatteredPixelDungeon.isAccessibilityMode){
+            //remove drag functionality if accessibility mode - replace with swipe to move
 
             if (!dragging && PointF.distance(event.current, event.start) > dragThreshold) {
 
                 dragging = true;
                 lastPos.set(event.current);
+                startPos.set(event.current);
 
             } else if (dragging) {
-                camera.shift(PointF.diff(lastPos, event.current).invScale(camera.zoom));
+
+                //System.out.println(PointF.diff(lastPos,event.current));
+
                 lastPos.set(event.current);
+                if (PointF.distance(startPos, lastPos) > swipeThreshold && !justDragged){
+
+                    onSwipe();
+                    justDragged = true;
+
+                    return;
+
+                }
+
+            }
+
+
+        }else {
+
+            if (pinching) {
+
+                float curSpan = PointF.distance(curEvent.current, another.current);
+                float zoom = (startZoom * curSpan / startSpan);
+                camera.zoom(GameMath.gate(
+                        PixelScene.minZoom,
+                        zoom - (zoom % 0.1f),
+                        PixelScene.maxZoom));
+
+            } else {
+
+                if (!dragging && PointF.distance(event.current, event.start) > dragThreshold) {
+
+                    dragging = true;
+                    lastPos.set(event.current);
+
+                } else if (dragging) {
+                    camera.shift(PointF.diff(lastPos, event.current).invScale(camera.zoom));
+                    lastPos.set(event.current);
+                }
             }
         }
     }

@@ -26,8 +26,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -36,6 +41,7 @@ import android.view.ViewConfiguration;
 import android.widget.Toast;
 
 import com.badlogic.gdx.Files;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.backends.android.AndroidAudio;
@@ -92,7 +98,28 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 					Log.i(LOG_TAG, "Recognition Available: " + SpeechRecognizer.isRecognitionAvailable(ref));
 					speechRecognizer.setRecognitionListener(ref);
 					speechRecognizer.startListening(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH));
+					/*
+					MediaPlayer player = MediaPlayer.create(AndroidGame.this, Settings.System.DEFAULT_ALARM_ALERT_URI);
+					player.start();
+					player.release();
+					*/
+					((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
+
 					StateReader.busy = true;
+				}
+			};
+
+			Runnable listenStopper = new Runnable(){
+				@Override
+				public void run(){
+					System.out.println("Stopping Recognizer");
+					StateReader.busy = false;
+					if (speechRecognizer != null) {
+						speechRecognizer.destroy();
+						Log.i(LOG_TAG, "destroy");
+						((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
+
+					}
 				}
 			};
 
@@ -101,7 +128,10 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 				runOnUiThread(listenStarter);
 			}
 
-
+			@Override
+			public void kill() {
+				runOnUiThread(listenStopper);
+			}
 
 
 		};
@@ -212,7 +242,7 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 	@Override
 	public void onRmsChanged(float v) {
 
-		Log.i(LOG_TAG, "onRmsChanged: " + v);
+		//Log.i(LOG_TAG, "onRmsChanged: " + v);
 	}
 
 	@Override
@@ -285,6 +315,7 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 		StateReader.busy = false;
 		speechRecognizer.stopListening();
 		speechRecognizer.destroy();
+		((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
 		StateReader.handleCommand(text);
 	}
 

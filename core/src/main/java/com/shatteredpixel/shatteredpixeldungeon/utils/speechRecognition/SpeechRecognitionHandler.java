@@ -26,5 +26,11 @@ public class SpeechRecognitionHandler {
             }
         }
     }
+    public void dispatchKillEvent(){
+        for (SpeechRecognitionListener l : listeners) {
+            l.kill();
+
+        }
+    }
 
 }

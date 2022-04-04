@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class VoiceCommands {
 
     //the maximum distance we will look around a tile to find a close approximation of the user command
-    private static final int MAX_CHECK_DISTANCE = 10;
+    private static final int MAX_CHECK_DISTANCE = 6;
 
     public static HeroAction lastCommand;
     public static String lastDirection;
@@ -23,8 +23,8 @@ public class VoiceCommands {
     public static void voiceMoveInDirection(String direction) {
 
         int targetPosition = checkAroundHelper(direction);
-        if (targetPosition == -1 || targetPosition == Dungeon.hero.pos){
-            StateReader.speechEventHandler.setMsg("Terrain is impassable to the "+ direction);
+        if (targetPosition == -1) {
+            StateReader.speechEventHandler.setMsg("Terrain is impassable to the " + direction);
             return;
         }
         Dungeon.hero.curAction = new HeroAction.Move(targetPosition);
@@ -68,7 +68,6 @@ public class VoiceCommands {
     }
 
 
-
     public static void voiceGrabItem(Integer pos) {
 
         Dungeon.hero.curAction = new HeroAction.PickUp(pos);
@@ -80,22 +79,19 @@ public class VoiceCommands {
 
     public static void repeat() {
 
-        if (lastCommand instanceof HeroAction.Move){
+        if (lastCommand instanceof HeroAction.Move) {
 
-            if (lastDirection != null){
+            if (lastDirection != null) {
                 voiceMoveInDirection(lastDirection);
 
-            }
-            else if(lastPosition != null){
+            } else if (lastPosition != null) {
                 voiceMoveTowardsObject(lastPosition);
 
             }
 
-        }
+        } else if (lastCommand instanceof HeroAction.Attack) {
 
-        else if (lastCommand instanceof HeroAction.Attack){
-
-            if (lastTarget.isAlive()){
+            if (lastTarget.isAlive()) {
                 voiceAttack(lastTarget);
 
             }
@@ -106,7 +102,7 @@ public class VoiceCommands {
     public static void voiceLookPaths() {
 
 
-        if (checkAroundHelper("north") != -1 ) {
+        if (checkAroundHelper("north") != -1) {
 
             StateReader.speechEventHandler.setMsg("Path to the north");
 
@@ -164,6 +160,19 @@ public class VoiceCommands {
 
     }
 
+    public static void voiceLookRoom(){
+
+        for (int tile: Dungeon.level.map){
+            if (Dungeon.hero.fieldOfView[tile]) {
+                if ((Dungeon.level.map[tile] == Terrain.EXIT || Dungeon.level.map[tile] == Terrain.ENTRANCE) && Dungeon.hero.fieldOfView[tile]){
+
+                    StateReader.speechEventHandler.setMsg(Dungeon.level.tileName(tile) + " to the " + CommandMapper.determineRelativePos(tile));
+
+                }
+            }
+        }
+
+    }
 
     public static void voiceLookItems() {
 
@@ -184,8 +193,13 @@ public class VoiceCommands {
 
         boolean hasDoor = false;
         for (int i = 0; i < Dungeon.level.map.length; ++i) {
-            if (Dungeon.level.map[i] == Terrain.DOOR && Dungeon.hero.fieldOfView[i]) {
-                StateReader.speechEventHandler.setMsg("Door " + CommandMapper.determineRelativePos(i));
+            if ((Dungeon.level.map[i] == Terrain.DOOR || Dungeon.level.map[i] == Terrain.LOCKED_DOOR) && Dungeon.hero.fieldOfView[i]) {
+                String response = "";
+                if (Dungeon.level.map[i] == Terrain.LOCKED_DOOR){
+                    response += "Locked ";
+                }
+                response += "Door to the " + CommandMapper.determineRelativePos(i);
+                StateReader.speechEventHandler.setMsg(response);
                 hasDoor = true;
             }
 
@@ -200,94 +214,77 @@ public class VoiceCommands {
         voiceLookEnemies();
         voiceLookItems();
         voiceLookDoors();
+        voiceLookRoom();
         voiceLookPaths();
-    }
-
-
-    public static void voiceLookMap(){
-
-
 
     }
+
 
     //discover farthest passable tile to stated tile (if tile unpassable)
     private static int checkAroundHelper(String direction) {
 
+        return checkAroundHelperRecurse(direction, Dungeon.hero.pos,Dungeon.hero.pos, 0);
 
-        ArrayList<Integer> candidatePoints = new ArrayList<>();
-
-        for (int i = 0; i < Dungeon.level.map.length; ++i){
-
-            if (Dungeon.level.passable[i] /*&& Dungeon.hero.fieldOfView[i]*/ && CommandMapper.determineRelativePos(i).equals(direction)){
-                candidatePoints.add(i);
-            }
-
-        }
-
-        int x;
-        int y;
-        int playerX = Dungeon.hero.pos % Dungeon.level.width();
-        int playerY = Dungeon.hero.pos % Dungeon.level.height();
-        int distance;
-        int furthestPoint = -1;
-        if (candidatePoints.size() > 0){
-            Integer maxDist = -1;
-            
-            for (Integer point: candidatePoints){
-                x = point % Dungeon.level.width();
-                y = point % Dungeon.level.height();
-
-                distance = (int) Math.sqrt(Math.pow((double)(playerX-x) ,2) + Math.pow((double)(playerY-y) ,2));
-
-                if (distance > maxDist ){
-                    maxDist = distance;
-                    furthestPoint = point;
-                }
-
-            }
-            return furthestPoint;
-        }
-
-        return -1;
     }
 
+    private static int checkAroundHelperRecurse(String direction, int lastValid, int toCheck, int count) {
 
-    private static int directionToValue(String direction, int dest) {
 
-        //if still no nearby tile is passable, recurse in direction of "direction" arg
+        if (count >= MAX_CHECK_DISTANCE){
+            if (lastValid == Dungeon.hero.pos){
+                return -1;
+            }
+            return lastValid;
+        }
+
         if (direction.equals("north")) {
-
-            return dest - Dungeon.level.width();
+            if (toCheck - Dungeon.level.width() > 0){
+                toCheck = toCheck - Dungeon.level.width();
+            }
         }
-        if (direction.equals("south")) {
-
-            return dest + Dungeon.level.width();
+        else if (direction.equals("south")) {
+            if (toCheck + Dungeon.level.width() < Dungeon.level.length()){
+                toCheck = toCheck + Dungeon.level.width();
+            }
         }
-        if (direction.equals("east")) {
-
-            return dest + 1;
+        else if (direction.equals("west")) {
+            if (toCheck - 1 > 0){
+                toCheck = toCheck - 1;
+            }
         }
-        if (direction.equals("west")) {
-
-            return dest - 1;
+        else if (direction.equals("east")) {
+            if (toCheck + 1 < Dungeon.level.length()){
+                toCheck = toCheck + 1;
+            }
         }
-        if (direction.equals("northeast")) {
-
-            return dest - (Dungeon.level.width()) + 1;
+        else  if (direction.equals("northeast")) {
+            if (toCheck - Dungeon.level.width()  + 1> 0){
+                toCheck = toCheck - Dungeon.level.width()  + 1;
+            }
+        }else  if (direction.equals("northwest")) {
+            if (toCheck - Dungeon.level.width()  -1 > 0){
+                toCheck = toCheck - Dungeon.level.width()  -1;
+            }
+        }else  if (direction.equals("southeast")) {
+            if (toCheck + Dungeon.level.width()  + 1 < Dungeon.level.length()){
+                toCheck = toCheck + Dungeon.level.width()  + 1;
+            }
+        }else  if (direction.equals("southwest")) {
+            if (toCheck + Dungeon.level.width()  - 1 < Dungeon.level.length()){
+                toCheck = toCheck + Dungeon.level.width()  - 1;
+            }
         }
-        if (direction.equals("northwest")) {
-            return dest - (Dungeon.level.width()) - 1;
 
-        }
-        if (direction.equals("southeast")) {
-            return dest + (Dungeon.level.width()) + 1;
 
-        }
-        if (direction.equals("southwest")) {
-            return dest + (Dungeon.level.width()) - 1;
 
+
+        if (Dungeon.level.passable[toCheck] && (Dungeon.level.visited[toCheck] || Dungeon.hero.fieldOfView[toCheck]) ){
+            lastValid = toCheck;
         }
 
-        return -1;
+        return checkAroundHelperRecurse(direction,lastValid,toCheck, count + 1);
+
     }
+
+
 }

@@ -4,5 +4,6 @@ public interface SpeechRecognitionListener {
 
     public void execute();
 
+    public void kill();
 
 }

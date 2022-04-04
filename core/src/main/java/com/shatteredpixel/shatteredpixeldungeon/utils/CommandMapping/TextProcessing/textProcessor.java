@@ -160,7 +160,6 @@ public class textProcessor {
         synonymList.put("moo", "move");
 
         synonymList.put("northwestern", "northwest");
-
         synonymList.put("northern", "north");
         synonymList.put("northeastern", "northeast");
         synonymList.put("southern", "south");
@@ -284,10 +283,10 @@ public class textProcessor {
     }
 
     public ArrayList<String> processCommand(String command) {
-        command = command.substring(0, command.length() - 1);
+        //command = command.substring(0, command.length() - 1);
         command = command.toLowerCase(Locale.ROOT);
         ArrayList<String> returnArray = tokenizeCommand(command);
-        stemWords(returnArray);
+        //stemWords(returnArray);
         swapSynonyms(returnArray);
         swapNumbers(returnArray);
         expandContractions(returnArray);

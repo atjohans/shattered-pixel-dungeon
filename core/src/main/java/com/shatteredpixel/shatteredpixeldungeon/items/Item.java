@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
@@ -139,8 +140,17 @@ public class Item implements Bundlable {
 	}
 
 	public void doThrow( Hero hero ) {
+
 		GameScene.selectCell(thrower);
+
 	}
+
+
+	//Used for the voice "throw" voice command
+	public void doThrow( int cell, Hero hero ){
+		this.cast( hero, cell );
+	}
+
 	
 	public void execute( Hero hero, String action ) {
 
