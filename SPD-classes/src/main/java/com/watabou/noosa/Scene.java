@@ -35,6 +35,7 @@ public class Scene extends Group {
 			@Override
 			public boolean onSignal( KeyEvent event ) {
 				if (Game.instance != null && event.pressed) {
+
 					if (KeyBindings.getActionForKey( event ) == GameAction.BACK){
 						onBackPressed();
 					}

@@ -338,7 +338,7 @@ public class CellSelector extends ScrollArea {
         String direction = determineSwipeDirection(startPos,lastPos);
 
         if(direction != null){
-            CommandMapper.mapCommand(direction);
+            StateReader.handleCommand(direction);
         }
 
 

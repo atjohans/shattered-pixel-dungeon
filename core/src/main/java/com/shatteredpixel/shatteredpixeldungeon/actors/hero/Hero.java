@@ -129,7 +129,9 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
+import com.shatteredpixel.shatteredpixeldungeon.utils.CommandMapping.CommandMapper;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
@@ -1265,13 +1267,14 @@ public class Hero extends Char {
 		ArrayList<Mob> visible = new ArrayList<>();
 
 		boolean newMob = false;
-
+		Mob newMobInstance = null;
 		Mob target = null;
 		for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])) {
 			if (fieldOfView[ m.pos ] && m.alignment == Alignment.ENEMY) {
 				visible.add(m);
 				if (!visibleEnemies.contains( m )) {
 					newMob = true;
+					newMobInstance = m;
 				}
 
 				if (!mindVisionEnemies.contains(m) && QuickSlotButton.autoAim(m) != -1){
@@ -1301,6 +1304,9 @@ public class Hero extends Char {
 		
 		if (newMob) {
 			interrupt();
+			if (ShatteredPixelDungeon.isAccessibilityMode){
+				StateReader.speechEventHandler.setMsg("A " + newMobInstance.name() + " has appeared to the " + CommandMapper.determineRelativePos(newMobInstance.pos));
+			}
 			if (resting){
 				Dungeon.observe();
 				resting = false;
@@ -1424,7 +1430,7 @@ public class Hero extends Char {
 	}
 	
 	public boolean handle( int cell ) {
-		
+
 		if (cell == -1) {
 			return false;
 		}

@@ -7,8 +7,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 
-import java.util.ArrayList;
-
 
 public class VoiceCommands {
 
@@ -34,70 +32,9 @@ public class VoiceCommands {
         lastTarget = null;
         Dungeon.hero.act();
 
-        StateReader.updateState();
         Dungeon.hero.next();
     }
 
-    public static void voiceMoveTowardsObject(int objPosition) {
-        System.out.println("MOVING TOWARDS: " + CommandMapper.determineRelativePos((Integer) objPosition));
-        Dungeon.hero.curAction = new HeroAction.Move((Integer) objPosition);
-        lastCommand = Dungeon.hero.curAction;
-        lastDirection = null;
-        lastTarget = null;
-        lastPosition = objPosition;
-        Dungeon.hero.act();
-
-        StateReader.updateState();
-        Dungeon.hero.next();
-
-    }
-
-
-    public static void voiceAttack(Mob mob) {
-
-        Dungeon.hero.curAction = new HeroAction.Attack((Mob) mob);
-        lastCommand = Dungeon.hero.curAction;
-        lastDirection = null;
-        lastPosition = null;
-        lastTarget = mob;
-        Dungeon.hero.act();
-
-        StateReader.updateState();
-        Dungeon.hero.next();
-
-    }
-
-
-    public static void voiceGrabItem(Integer pos) {
-
-        Dungeon.hero.curAction = new HeroAction.PickUp(pos);
-        Dungeon.hero.act();
-        StateReader.updateState();
-        Dungeon.hero.next();
-    }
-
-
-    public static void repeat() {
-
-        if (lastCommand instanceof HeroAction.Move) {
-
-            if (lastDirection != null) {
-                voiceMoveInDirection(lastDirection);
-
-            } else if (lastPosition != null) {
-                voiceMoveTowardsObject(lastPosition);
-
-            }
-
-        } else if (lastCommand instanceof HeroAction.Attack) {
-
-            if (lastTarget.isAlive()) {
-                voiceAttack(lastTarget);
-
-            }
-
-        }
-    }
 
     public static void voiceLookPaths() {
 
@@ -162,11 +99,17 @@ public class VoiceCommands {
 
     public static void voiceLookRoom(){
 
-        for (int tile: Dungeon.level.map){
-            if (Dungeon.hero.fieldOfView[tile]) {
-                if ((Dungeon.level.map[tile] == Terrain.EXIT || Dungeon.level.map[tile] == Terrain.ENTRANCE) && Dungeon.hero.fieldOfView[tile]){
 
-                    StateReader.speechEventHandler.setMsg(Dungeon.level.tileName(tile) + " to the " + CommandMapper.determineRelativePos(tile));
+        for (int tile = 0; tile < Dungeon.level.map.length; tile ++){
+            if (Dungeon.hero.fieldOfView[tile]) {
+                System.out.println(Dungeon.level.tileName(tile));
+                if (Dungeon.level.map[tile] == Terrain.EXIT){
+
+                    StateReader.speechEventHandler.setMsg("Exit to the " + CommandMapper.determineRelativePos(tile));
+
+                }else  if (Dungeon.level.map[tile] == Terrain.ENTRANCE){
+
+                    StateReader.speechEventHandler.setMsg("Entrance to the " + CommandMapper.determineRelativePos(tile));
 
                 }
             }

@@ -28,6 +28,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -50,7 +51,10 @@ public class StartScene extends PixelScene {
 	@Override
 	public void create() {
 		super.create();
-		
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Games In Progress");
+
+
 		Badges.loadGlobal();
 		Journal.loadGlobal();
 		
@@ -90,9 +94,11 @@ public class StartScene extends PixelScene {
 			existingGame.set(game.slot);
 			existingGame.setRect((w - SLOT_WIDTH) / 2f, yPos, SLOT_WIDTH, SLOT_HEIGHT);
 			yPos += SLOT_HEIGHT + slotGap;
-			align(existingGame);
-			add(existingGame);
-			
+			if (ShatteredPixelDungeon.isAccessibilityMode && accessibleInterface != null){
+				accessibleInterface.add(existingGame);
+			}
+				align(existingGame);
+				add(existingGame);
 		}
 		
 		if (games.size() < GamesInProgress.MAX_SLOTS){
@@ -100,13 +106,34 @@ public class StartScene extends PixelScene {
 			newGame.set(GamesInProgress.firstEmpty());
 			newGame.setRect((w - SLOT_WIDTH) / 2f, yPos, SLOT_WIDTH, SLOT_HEIGHT);
 			yPos += SLOT_HEIGHT + slotGap;
-			align(newGame);
-			add(newGame);
+			if (ShatteredPixelDungeon.isAccessibilityMode && accessibleInterface != null){
+				accessibleInterface.add(newGame);
+			}
+				align(newGame);
+				add(newGame);
+
 		}
 		
 		GamesInProgress.curSlot = 0;
-		
+
 		fadeIn();
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+
+			accessibleInterface.add(btnExit);
+
+			for (Button button: accessibleInterface.menuButtons){
+				button.visible = false;
+			}
+
+			accessibleInterface.readName();
+			add(accessibleInterface);
+			accessibleInterface.setRect(0, 0, w, h);
+			align(accessibleInterface);
+
+		}
+
+
 		
 	}
 	
@@ -115,7 +142,7 @@ public class StartScene extends PixelScene {
 		ShatteredPixelDungeon.switchNoFade( TitleScene.class );
 	}
 	
-	private static class SaveSlotButton extends Button {
+	public static class SaveSlotButton extends Button {
 		
 		private NinePatch bg;
 		
@@ -129,7 +156,14 @@ public class StartScene extends PixelScene {
 		
 		private int slot;
 		private boolean newGame;
-		
+
+		public RenderedTextBlock getName(){
+			return this.name;
+		}
+		public BitmapText getDepth(){
+			return this.depth;
+		}
+
 		@Override
 		protected void createChildren() {
 			super.createChildren();
@@ -192,7 +226,6 @@ public class StartScene extends PixelScene {
 				
 				level.text(Integer.toString(info.level));
 				level.measure();
-				
 				if (info.challenges > 0){
 					name.hardlight(Window.TITLE_COLOR);
 					depth.hardlight(Window.TITLE_COLOR);

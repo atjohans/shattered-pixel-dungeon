@@ -34,29 +34,37 @@ import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.AvailableUpdateData;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndSettings;
 import com.watabou.glwrap.Blending;
+import com.watabou.input.KeyEvent;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.Scene;
 import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.ui.Button;
 import com.watabou.utils.ColorMath;
 import com.watabou.utils.DeviceCompat;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 public class TitleScene extends PixelScene {
-	
+
+
 	@Override
 	public void create() {
 		
 		super.create();
+
 
 		Music.INSTANCE.playTracks(
 				new String[]{Assets.Music.THEME_1, Assets.Music.THEME_2},
@@ -105,7 +113,9 @@ public class TitleScene extends PixelScene {
 		add( signs );
 
 		final Chrome.Type GREY_TR = Chrome.Type.GREY_BUTTON_TR;
-		
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(GREY_TR, "", "Title Scene");
+
 		StyledButton btnPlay = new StyledButton(GREY_TR, Messages.get(this, "enter")){
 			@Override
 			protected void onClick() {
@@ -151,6 +161,18 @@ public class TitleScene extends PixelScene {
 				ShatteredPixelDungeon.switchNoFade( BadgesScene.class );
 			}
 		};
+
+		StyledButton btnAccessible = new StyledButton(GREY_TR, "Toggle Visual Accessibility"){
+			@Override
+			protected void onClick() {
+				ShatteredPixelDungeon.isAccessibilityMode = !ShatteredPixelDungeon.isAccessibilityMode;
+
+				ShatteredPixelDungeon.switchScene(TitleScene.class);
+
+				}
+		};
+		add(btnAccessible);
+
 		btnBadges.icon(Icons.get(Icons.BADGES));
 		add(btnBadges);
 
@@ -178,28 +200,49 @@ public class TitleScene extends PixelScene {
 		GAP /= landscape() ? 3 : 5;
 		GAP = Math.max(GAP, 2);
 
-		if (landscape()) {
-			btnPlay.setRect(title.x-50, topRegion+GAP, ((title.width()+100)/2)-1, BTN_HEIGHT);
-			align(btnPlay);
-			btnSupport.setRect(btnPlay.right()+2, btnPlay.top(), btnPlay.width(), BTN_HEIGHT);
-			btnRankings.setRect(btnPlay.left(), btnPlay.bottom()+ GAP, (btnPlay.width()*.67f)-1, BTN_HEIGHT);
-			btnBadges.setRect(btnRankings.left(), btnRankings.bottom()+GAP, btnRankings.width(), BTN_HEIGHT);
-			btnNews.setRect(btnRankings.right()+2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
-			btnChanges.setRect(btnNews.left(), btnNews.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
-			btnSettings.setRect(btnNews.right()+2, btnNews.top(), btnRankings.width(), BTN_HEIGHT);
-			btnAbout.setRect(btnSettings.left(), btnSettings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
-		} else {
-			btnPlay.setRect(title.x, topRegion+GAP, title.width(), BTN_HEIGHT);
-			align(btnPlay);
-			btnSupport.setRect(btnPlay.left(), btnPlay.bottom()+ GAP, btnPlay.width(), BTN_HEIGHT);
-			btnRankings.setRect(btnPlay.left(), btnSupport.bottom()+ GAP, (btnPlay.width()/2)-1, BTN_HEIGHT);
-			btnBadges.setRect(btnRankings.right()+2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
-			btnNews.setRect(btnRankings.left(), btnRankings.bottom()+ GAP, btnRankings.width(), BTN_HEIGHT);
-			btnChanges.setRect(btnNews.right()+2, btnNews.top(), btnNews.width(), BTN_HEIGHT);
-			btnSettings.setRect(btnNews.left(), btnNews.bottom()+GAP, btnRankings.width(), BTN_HEIGHT);
-			btnAbout.setRect(btnSettings.right()+2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
-		}
 
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
+			accessibleInterface.add((btnAccessible));
+			accessibleInterface.add(btnBadges);
+			accessibleInterface.add(btnPlay);
+			accessibleInterface.add(btnRankings);
+			accessibleInterface.add(btnSettings);
+
+			accessibleInterface.suppressButton(btnChanges);
+			accessibleInterface.suppressButton(btnSupport);
+			accessibleInterface.suppressButton(btnAbout);
+			accessibleInterface.suppressButton(btnNews);
+
+			for (Button button: accessibleInterface.menuButtons){
+				button.visible = false;
+			}
+
+		}else {
+			if (landscape()) {
+				btnPlay.setRect(title.x - 50, topRegion + GAP, ((title.width() + 100) / 2) - 1, BTN_HEIGHT);
+				align(btnPlay);
+				btnSupport.setRect(btnPlay.right() + 2, btnPlay.top(), btnPlay.width(), BTN_HEIGHT);
+				btnRankings.setRect(btnPlay.left(), btnPlay.bottom() + GAP, (btnPlay.width() * .67f) - 1, BTN_HEIGHT);
+				btnBadges.setRect(btnRankings.left(), btnRankings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+				btnNews.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
+				btnChanges.setRect(btnNews.left(), btnNews.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+				btnSettings.setRect(btnNews.right() + 2, btnNews.top(), btnRankings.width(), BTN_HEIGHT);
+				btnAbout.setRect(btnSettings.left(), btnSettings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+				btnAccessible.setRect(btnSettings.left(), btnAbout.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+
+			} else {
+				btnPlay.setRect(title.x, topRegion + GAP, title.width(), BTN_HEIGHT);
+				align(btnPlay);
+				btnSupport.setRect(btnPlay.left(), btnPlay.bottom() + GAP, btnPlay.width(), BTN_HEIGHT);
+				btnRankings.setRect(btnPlay.left(), btnSupport.bottom() + GAP, (btnPlay.width() / 2) - 1, BTN_HEIGHT);
+				btnBadges.setRect(btnRankings.right() + 2, btnRankings.top(), btnRankings.width(), BTN_HEIGHT);
+				btnNews.setRect(btnRankings.left(), btnRankings.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+				btnChanges.setRect(btnNews.right() + 2, btnNews.top(), btnNews.width(), BTN_HEIGHT);
+				btnSettings.setRect(btnNews.left(), btnNews.bottom() + GAP, btnRankings.width(), BTN_HEIGHT);
+				btnAbout.setRect(btnSettings.right() + 2, btnSettings.top(), btnSettings.width(), BTN_HEIGHT);
+				btnAccessible.setRect(title.x, btnSettings.bottom() + GAP, title.width(), BTN_HEIGHT);
+			}
+		}
 		BitmapText version = new BitmapText( "v" + Game.version, pixelFont);
 		version.measure();
 		version.hardlight( 0x888888 );
@@ -207,7 +250,18 @@ public class TitleScene extends PixelScene {
 		version.y = h - version.height() - 2;
 		add( version );
 
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+			accessibleInterface.readName();
+			StateReader.speechEventHandler.setMsg("Running in Visual Accessibility Mode. Click to Scroll Through Buttons. Double Click to Activate. Triple Click to immediately go back");
+			add(accessibleInterface);
+			accessibleInterface.setRect(0, 0, w, h);
+			align(accessibleInterface);
+		}
+
 		fadeIn();
+
+
+
 	}
 	
 	private void placeTorch( float x, float y ) {

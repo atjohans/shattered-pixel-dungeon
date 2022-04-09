@@ -23,8 +23,10 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BadgesGrid;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
@@ -32,11 +34,14 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.audio.Music;
+import com.watabou.noosa.ui.Button;
 
 public class BadgesScene extends PixelScene {
 
 	@Override
 	public void create() {
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Badges");
 
 		super.create();
 
@@ -74,6 +79,20 @@ public class BadgesScene extends PixelScene {
 		ExitButton btnExit = new ExitButton();
 		btnExit.setPos( Camera.main.width - btnExit.width(), 0 );
 		add( btnExit );
+
+
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
+			for (BadgesGrid.BadgeButton button : grid.badgeButtons) {
+				accessibleInterface.add(button);
+
+			}
+			accessibleInterface.add(btnExit);
+			grid.visible = false;
+
+			accessibleInterface.replaceInterface();
+			accessibleInterface.setRect(0,0,Camera.main.width, Camera.main.height);
+			add(accessibleInterface);
+		}
 
 		fadeIn();
 	}

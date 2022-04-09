@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsArticle;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Archs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -57,6 +58,8 @@ public class NewsScene extends PixelScene {
 	@Override
 	public void create() {
 		super.create();
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "News");
 
 		uiCamera.visible = false;
 
@@ -158,6 +161,15 @@ public class NewsScene extends PixelScene {
 		btnSite.textColor(Window.TITLE_COLOR);
 		btnSite.setRect(left, top, fullWidth, BTN_HEIGHT);
 		add(btnSite);
+
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+
+			accessibleInterface.add(btnSite);
+
+
+		}
+
 
 	}
 

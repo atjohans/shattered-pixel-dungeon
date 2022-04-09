@@ -36,7 +36,7 @@ public class SpeechEventListenerAndroid {
             @Override
             public void stateChanged(StringChangeEvent event) {
                 String msg = event.getDispatcher().getMsg();
-                if (msg == StateReader.speechEventStop) {
+                if (msg.equals(StateReader.speechEventStop)) {
                     tts.stop();
 
                 } else {

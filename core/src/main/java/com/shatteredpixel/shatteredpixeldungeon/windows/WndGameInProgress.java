@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -31,11 +32,13 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.StartScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.ui.Button;
 import com.watabou.utils.Bundle;
@@ -53,9 +56,11 @@ public class WndGameInProgress extends Window {
 	private float pos;
 	
 	public WndGameInProgress(final int slot){
-		
+
+
 		final GamesInProgress.Info info = GamesInProgress.check(slot);
-		
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "",info.heroClass.name());
+
 		String className = null;
 		if (info.subClass != HeroSubClass.NONE){
 			className = info.subClass.title();
@@ -90,9 +95,9 @@ public class WndGameInProgress extends Window {
 		if (info.challenges > 0) GAP -= 2;
 		
 		pos = title.bottom() + GAP;
-		
+		RedButton btnChallenges = null;
 		if (info.challenges > 0) {
-			RedButton btnChallenges = new RedButton( Messages.get(this, "challenges") ) {
+			btnChallenges = new RedButton( Messages.get(this, "challenges") ) {
 				@Override
 				protected void onClick() {
 					Game.scene().add( new WndChallenges( info.challenges, false ) );
@@ -167,6 +172,20 @@ public class WndGameInProgress extends Window {
 		add(erase);
 		
 		resize(WIDTH, (int)cont.bottom()+1);
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+
+			accessibleInterface.add(erase);
+			accessibleInterface.add(cont);
+			if (btnChallenges != null)
+				accessibleInterface.add(btnChallenges);
+
+			accessibleInterface.replaceInterface();
+			accessibleInterface.readName();
+			accessibleInterface.setRect(0,0,Camera.main.width, Camera.main.height);
+			add(accessibleInterface);
+		}
+
 	}
 	
 	private void statSlot( String label, String value ) {

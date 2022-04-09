@@ -31,6 +31,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
@@ -47,6 +48,7 @@ import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.ui.Button;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.GameMath;
 
@@ -56,6 +58,7 @@ public class HeroSelectScene extends PixelScene {
 
 	private Image background;
 	private RenderedTextBlock prompt;
+
 
 	//fading UI elements
 	private ArrayList<StyledButton> heroBtns = new ArrayList<>();
@@ -67,6 +70,8 @@ public class HeroSelectScene extends PixelScene {
 	@Override
 	public void create() {
 		super.create();
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "New Game Hero Selection: Choose your hero");
 
 		Dungeon.hero = null;
 
@@ -214,6 +219,30 @@ public class HeroSelectScene extends PixelScene {
 			setSelectedHero(GamesInProgress.selectedClass);
 		}
 
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+			for (Button button: heroBtns){
+				accessibleInterface.add(button);
+			}
+
+			accessibleInterface.add(btnExit);
+
+			accessibleInterface.add(startBtn);
+			accessibleInterface.add(infoButton);
+			accessibleInterface.add(challengeButton);
+
+			infoButton.setName("info");
+			challengeButton.setName("Challenges");
+
+			for (Button button: accessibleInterface.menuButtons){
+				button.visible = false;
+			}
+			add(accessibleInterface);
+			accessibleInterface.setRect(0, 0, Camera.main.width, Camera.main.height);
+			align(accessibleInterface);
+			accessibleInterface.readName();
+
+		}
+
 		fadeIn();
 
 	}
@@ -279,12 +308,16 @@ public class HeroSelectScene extends PixelScene {
 		}
 	}
 
-	private class HeroBtn extends StyledButton {
+	public class HeroBtn extends StyledButton {
 
 		private HeroClass cl;
 
 		private static final int MIN_WIDTH = 20;
 		private static final int HEIGHT = 24;
+
+		public HeroClass getCl(){
+			return this.cl;
+		}
 
 		HeroBtn ( HeroClass cl ){
 			super(Chrome.Type.GREY_BUTTON_TR, "");

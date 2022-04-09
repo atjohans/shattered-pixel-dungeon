@@ -36,6 +36,7 @@ public class CommandMapper {
     public static String lastCommand;
 
 
+
     private static boolean checkLevelUpCommand(ArrayList<String> processedCommandList){
 
         if (processedCommandList.contains("level") && processedCommandList.contains("up")){
@@ -44,6 +45,30 @@ public class CommandMapper {
             return true;
 
         }
+        return false;
+    }
+
+    private static boolean checkSearchCommand(ArrayList<String> processedCommandList){
+
+        if (processedCommandList.contains("search")){
+            Dungeon.hero.search(true);
+            return true;
+        }
+
+        return false;
+    }
+    private static boolean checkRestCommand(ArrayList<String> processedCommandList){
+
+        if (processedCommandList.contains("rest")){
+            if (processedCommandList.contains("full")){
+
+                Dungeon.hero.rest(true);
+                return true;
+            }
+            Dungeon.hero.rest(false);
+            return true;
+        }
+
         return false;
     }
 
@@ -59,6 +84,7 @@ public class CommandMapper {
 
             numMatching = numMatching(itemNameElts, processedCommandList);
             if (numMatching > 0 && numMatching > curBest) {
+
                 curBest = numMatching;
                 bestMatch = item;
             }
@@ -162,17 +188,25 @@ public class CommandMapper {
 
             return true;
 
-        } else if (processedCommandList.contains("journal")) {
+        }
+        if (processedCommandList.contains("journal")) {
             return true;
         }
+        if (processedCommandList.contains("status")){
+
+            StateReader.speechEventHandler.setMsg("Health at " + (int)(((float)Dungeon.hero.HP/ (float)Dungeon.hero.HT) * 100) + " percent");
+            return true;
+
+        }
+
+
 
         return false;
     }
 
 
     private static boolean checkAttackCommand(ArrayList<String> processedCommandList) {
-        String direction = getDirection(processedCommandList);
-        String keyword = null;
+
         if (processedCommandList.contains("attack")) {
 
             if (Dungeon.hero.visibleEnemies.size() == 0) {
@@ -182,59 +216,51 @@ public class CommandMapper {
             }
 
 
-            String[] enemyNameElts;
-
-            boolean hasCandidateMob = false;
-            Mob CandidateMob = null;
-
+            String direction = getDirection(processedCommandList);
+            Mob bestMatch = null;
+            Integer curBest = 0;
+            int numMatching = 0;
             for (Mob mob : Dungeon.hero.visibleEnemies) {
 
+                ArrayList<String> mobNameElts = new ArrayList<>(Arrays.asList(mob.name().toLowerCase(Locale.ROOT).split("\\s+")));
 
-                enemyNameElts = mob.name().toLowerCase(Locale.ROOT).split("\\s+");
-
-                for (String nameElt : enemyNameElts) {
-                    System.out.println(nameElt);
-                    if (processedCommandList.contains((nameElt))) {
-                        keyword = nameElt;
-                        if (direction == null) {
-                            Dungeon.hero.handle(mob.pos);
-                            Dungeon.hero.act();
-                            Dungeon.hero.next();
-                            return true;
-                        } else {
-                            if (determineRelativePos(mob.pos).equals(direction)) {
-                                Dungeon.hero.handle(mob.pos);
-                                Dungeon.hero.act();
-                                Dungeon.hero.next();
-                                return true;
-                            }
+                numMatching = numMatching(mobNameElts, processedCommandList);
+                if (numMatching > 0 && numMatching > curBest) {
+                    if (direction == null) {
+                        curBest = numMatching;
+                        bestMatch = mob;
+                    }else{
+                        if (determineRelativePos(mob.pos).equals(direction)){
+                            curBest = numMatching;
+                            bestMatch = mob;
                         }
                     }
                 }
 
-                if (direction != null) {
-                    if (keyword != null) {
-                        StateReader.speechEventHandler.setMsg("No " + keyword + " to the " + direction);
-                    }
-                } else {
-                    if (keyword != null) {
-                        StateReader.speechEventHandler.setMsg("No " + keyword + " visible");
-                    }
-                }
-
-
             }
-            VoiceCommands.voiceLookEnemies();
-            return true;
-        }
 
+            if (bestMatch == null ){
+                if (direction == null)
+                    StateReader.speechEventHandler.setMsg("No matching mob nearby");
+                else
+                    StateReader.speechEventHandler.setMsg("No matching mob to the " + direction);
+                return true;
+            }
+
+
+            Dungeon.hero.handle(bestMatch.pos);
+            Dungeon.hero.act();
+            Dungeon.hero.next();
+            return true;
+
+        }
         return false;
     }
 
 
     private static boolean checkGrabCommand(ArrayList<String> processedCommandList) {
 
-        String direction = null;
+        String direction = getDirection(processedCommandList);
 
         if (processedCommandList.contains("grab")) {
 
@@ -244,62 +270,40 @@ public class CommandMapper {
                 return true;
             }
 
-            String[] itemNameElts;
+            Heap bestMatch = null;
+            Integer curBest = 0;
+            int numMatching = 0;
+            for (Heap heap : Dungeon.level.heaps.valueList()) {
+                if (Dungeon.hero.fieldOfView[heap.pos]) {
+                    ArrayList<String> mobNameElts = new ArrayList<>(Arrays.asList(heap.toString().toLowerCase(Locale.ROOT).split("\\s+")));
 
-            boolean hasCandidateItem = false;
-            Heap CandidateItem = null;
-
-            if (direction == null) {
-
-                for (Heap heap : Dungeon.level.heaps.valueList()) {
-
-                    if (Dungeon.hero.fieldOfView[heap.pos]) {
-                        itemNameElts = heap.toString().toLowerCase(Locale.ROOT).split("\\s+");
-
-                        for (String nameElt : itemNameElts) {
-                            System.out.println(nameElt);
-                            if (processedCommandList.contains((nameElt))) {
-
-                                Dungeon.hero.handle(heap.pos);
-                                Dungeon.hero.act();
-                                Dungeon.hero.next();
-                                return true;
-                            }
-                        }
-
-                    }
-                }
-
-                StateReader.speechEventHandler.setMsg("No item of specified name nearby");
-
-            } else {
-
-                boolean hasItemInDirection = false;
-                for (Heap heap : Dungeon.level.heaps.valueList()) {
-                    if (Dungeon.hero.fieldOfView[heap.pos]) {
-                        if (determineRelativePos(heap.pos).equals(direction)) {
-                            hasItemInDirection = true;
-                            itemNameElts = heap.toString().toLowerCase(Locale.ROOT).split("\\s+");
-                            for (String nameElt : itemNameElts) {
-                                if (processedCommandList.contains(nameElt)) {
-                                    Dungeon.hero.handle(heap.pos);
-                                    Dungeon.hero.act();
-                                    Dungeon.hero.next();
-                                    return true;
-                                }
+                    numMatching = numMatching(mobNameElts, processedCommandList);
+                    if (numMatching > 0 && numMatching > curBest) {
+                        if (direction == null) {
+                            curBest = numMatching;
+                            bestMatch = heap;
+                        } else {
+                            if (determineRelativePos(heap.pos).equals(direction)) {
+                                curBest = numMatching;
+                                bestMatch = heap;
                             }
                         }
                     }
-                }
 
-                if (!hasItemInDirection) {
-                    StateReader.speechEventHandler.setMsg("No items in direction " + direction);
-                } else {
-                    StateReader.speechEventHandler.setMsg("No item of specified name nearby");
                 }
-
             }
-            VoiceCommands.voiceLookItems();
+            if (bestMatch == null ){
+                if (direction == null)
+                    StateReader.speechEventHandler.setMsg("No matching item nearby");
+                else
+                    StateReader.speechEventHandler.setMsg("No matching item to the " + direction);
+                return true;
+            }
+
+
+            Dungeon.hero.handle(bestMatch.pos);
+            Dungeon.hero.act();
+            Dungeon.hero.next();
             return true;
 
 
@@ -397,17 +401,17 @@ public class CommandMapper {
 
         if (processedCommandList.contains("look")) {
 
-            if (processedCommandList.contains("enemy")) {
+            if (processedCommandList.contains("enemy")|| processedCommandList.contains("enemies")) {
 
                 VoiceCommands.voiceLookEnemies();
                 return true;
             }
-            if (processedCommandList.contains("door")) {
+            if (processedCommandList.contains("door")|| processedCommandList.contains("doors")) {
 
                 VoiceCommands.voiceLookDoors();
                 return true;
             }
-            if (processedCommandList.contains("item")) {
+            if (processedCommandList.contains("item") || processedCommandList.contains("items")) {
                 VoiceCommands.voiceLookItems();
                 return true;
             }
@@ -416,7 +420,7 @@ public class CommandMapper {
                 return true;
             }
             if (processedCommandList.contains(("room"))) {
-
+                System.out.println("LOOK ROOM");
                 VoiceCommands.voiceLookRoom();
                 return true;
 
@@ -434,7 +438,6 @@ public class CommandMapper {
 
 
     public static void mapCommand(String command) {
-
         if (!Dungeon.hero.ready) {
             Dungeon.hero.next();
         }
@@ -447,6 +450,16 @@ public class CommandMapper {
         if (Dungeon.hero.isAlive()) {
             if (checkAttackCommand(processedCommandList)) {
                 System.out.println("ATTACK COMMAND");
+                lastCommand = command;
+                return;
+            }
+            if (checkSearchCommand(processedCommandList)) {
+                System.out.println("SEARCH COMMAND");
+                lastCommand = command;
+                return;
+            }
+            if (checkRestCommand(processedCommandList)) {
+                System.out.println("REST COMMAND");
                 lastCommand = command;
                 return;
             }
@@ -463,27 +476,31 @@ public class CommandMapper {
             if (checkMapCommand(processedCommandList)) {
                 System.out.println("MAP COMMAND");
                 lastCommand = command;
+
                 return;
             }
             if (checkLookCommand(processedCommandList)) {
                 System.out.println("LOOK COMMAND");
                 lastCommand = command;
+
                 return;
             }
             if (checkGrabCommand(processedCommandList)) {
                 System.out.println("GRAB COMMAND");
                 lastCommand = command;
+
                 return;
             }
             if (checkMoveCommand(processedCommandList)) {
                 System.out.println("MOVE COMMAND");
                 lastCommand = command;
+
                 return;
             }
-        } else {
-
-
         }
+
+
+        StateReader.speechEventHandler.setMsg("Unknown Command, please repeat");
     }
 
 

@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 public class BadgesGrid extends Component {
 
-	ArrayList<BadgeButton> badgeButtons;
+	public ArrayList<BadgeButton> badgeButtons;
 
 	public BadgesGrid( boolean global ){
 		super();
@@ -108,12 +108,19 @@ public class BadgesGrid extends Component {
 		}
 	}
 
-	private static class BadgeButton extends Button {
+	public static class BadgeButton extends Button {
 
 		private Badges.Badge badge;
 		private boolean unlocked;
 
 		private Image icon;
+
+		public Badges.Badge getBadge(){
+			return this.badge;
+		}
+		public boolean getStatus(){
+			return this.unlocked;
+		}
 
 		public BadgeButton( Badges.Badge badge, boolean unlocked ) {
 			super();

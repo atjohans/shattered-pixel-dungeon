@@ -105,6 +105,9 @@ public class Button extends Component {
 	protected void onPointerDown() {}
 	protected void onPointerUp() {}
 	protected void onClick() {}
+	public void activate(){
+		onClick();
+	}
 	protected boolean onLongClick() {
 		return false;
 	}

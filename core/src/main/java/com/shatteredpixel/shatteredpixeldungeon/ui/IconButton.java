@@ -30,6 +30,14 @@ import com.watabou.noosa.ui.Button;
 public class IconButton extends Button {
 	
 	protected Image icon;
+
+	private String name = null;
+	public void setName(String name){
+		this.name = name;
+	}
+	public String getName(){
+		return this.name;
+	}
 	
 	public IconButton(){
 		super();
