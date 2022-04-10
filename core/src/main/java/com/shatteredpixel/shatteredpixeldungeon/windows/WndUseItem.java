@@ -21,10 +21,16 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Camera;
 
 import java.util.ArrayList;
 
@@ -33,13 +39,23 @@ public class WndUseItem extends WndInfoItem {
 	private static final float BUTTON_HEIGHT	= 16;
 	
 	private static final float GAP	= 2;
-	
+
+	private Window owner;
+	public Window getOwner(){
+		return this.owner;
+	}
 	public WndUseItem( final Window owner, final Item item ) {
-		
+
 		super(item);
 
+		this.owner = owner;
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Use " + item.name());
+
 		float y = height;
-		
+		if (ShatteredPixelDungeon.isAccessibilityMode)
+			y = PixelScene.uiCamera.height;
+
 		if (Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(item)) {
 			y += GAP;
 			ArrayList<RedButton> buttons = new ArrayList<>();
@@ -52,22 +68,36 @@ public class WndUseItem extends WndInfoItem {
 						if (owner != null && owner.parent != null) owner.hide();
 						if (Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(item)){
 							item.execute( Dungeon.hero, action );
+
 						}
 					}
 				};
+
 				btn.setSize( btn.reqWidth(), BUTTON_HEIGHT );
 				buttons.add(btn);
 				add( btn );
-
+				if (ShatteredPixelDungeon.isAccessibilityMode)
+					accessibleInterface.add(btn);
 				if (action.equals(item.defaultAction)) {
 					btn.textColor( TITLE_COLOR );
 				}
-				
+
 			}
-			y = layoutButtons(buttons, width, y);
+			if (ShatteredPixelDungeon.isAccessibilityMode)
+				y = layoutButtons(buttons, PixelScene.uiCamera.width, y);
+			else
+				y = layoutButtons(buttons, width, y);
 		}
-		
-		resize( width, (int)(y) );
+		if (ShatteredPixelDungeon.isAccessibilityMode)
+			resize( PixelScene.uiCamera.width, (int)(y) );
+		else
+			resize( width, (int)(y) );
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+
+			accessibleInterface.create(this);
+
+		}
 	}
 
 	private static float layoutButtons(ArrayList<RedButton> buttons, float width, float y){

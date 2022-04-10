@@ -157,6 +157,7 @@ public class WndGameInProgress extends Window {
 							FileUtils.deleteDir(GamesInProgress.gameFolder(slot));
 							GamesInProgress.setUnknown(slot);
 							ShatteredPixelDungeon.switchNoFade(StartScene.class);
+
 						}
 					}
 				} );
@@ -175,15 +176,13 @@ public class WndGameInProgress extends Window {
 
 		if (ShatteredPixelDungeon.isAccessibilityMode){
 
-			accessibleInterface.add(erase);
-			accessibleInterface.add(cont);
 			if (btnChallenges != null)
 				accessibleInterface.add(btnChallenges);
 
-			accessibleInterface.replaceInterface();
-			accessibleInterface.readName();
-			accessibleInterface.setRect(0,0,Camera.main.width, Camera.main.height);
-			add(accessibleInterface);
+			accessibleInterface.add(cont);
+			accessibleInterface.add(erase);
+			accessibleInterface.create(this);
+			ShatteredPixelDungeon.scene().add(accessibleInterface);
 		}
 
 	}

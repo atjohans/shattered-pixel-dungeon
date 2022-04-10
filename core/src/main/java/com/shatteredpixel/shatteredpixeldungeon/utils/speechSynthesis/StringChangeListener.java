@@ -10,5 +10,7 @@ public interface StringChangeListener extends EventListener {
 
     public void stateChanged(StringChangeEvent event);
 
+
+
 }
 

@@ -82,16 +82,14 @@ public class BadgesScene extends PixelScene {
 
 
 		if (ShatteredPixelDungeon.isAccessibilityMode) {
-			for (BadgesGrid.BadgeButton button : grid.badgeButtons) {
-				accessibleInterface.add(button);
 
+			for (BadgesGrid.BadgeButton bdgButton: grid.badgeButtons){
+				accessibleInterface.add(bdgButton);
 			}
 			accessibleInterface.add(btnExit);
 			grid.visible = false;
 
-			accessibleInterface.replaceInterface();
-			accessibleInterface.setRect(0,0,Camera.main.width, Camera.main.height);
-			add(accessibleInterface);
+			accessibleInterface.create(this);
 		}
 
 		fadeIn();

@@ -60,6 +60,16 @@ public class WndHero extends WndTabbed {
 	private TalentsTab talents;
 	private BuffsTab buffs;
 
+	public TalentsTab getTalents(){
+		return this.talents;
+	}
+	public BuffsTab getBuffs(){
+		return this.buffs;
+	}
+	public StatsTab getStats(){
+		return this.stats;
+	}
+
 	public static int lastIdx = 0;
 
 	public WndHero() {

@@ -32,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -40,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Sample;
@@ -68,8 +70,13 @@ public class WndSettings extends WndTabbed {
 
 	public static int last_index = 0;
 
+	int musicVolAccessible = 5;
+	int soundEffectsVolume = 5;
 	public WndSettings() {
 		super();
+
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Settings");
+
 
 		float height;
 
@@ -78,95 +85,124 @@ public class WndSettings extends WndTabbed {
 		display = new DisplayTab();
 		display.setSize(width, 0);
 		height = display.height();
-		add( display );
+		add(display);
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
 
-		add( new IconTab(Icons.get(Icons.DISPLAY)){
-			@Override
-			protected void select(boolean value) {
-				super.select(value);
-				display.visible = display.active = value;
-				if (value) last_index = 0;
-			}
-		});
-
-		ui = new UITab();
-		ui.setSize(width, 0);
-		height = Math.max(height, ui.height());
-		add( ui );
-
-		add( new IconTab(Icons.get(Icons.PREFS)){
-			@Override
-			protected void select(boolean value) {
-				super.select(value);
-				ui.visible = ui.active = value;
-				if (value) last_index = 1;
-			}
-		});
-
-		data = new DataTab();
-		data.setSize(width, 0);
-		height = Math.max(height, data.height());
-		add( data );
-
-		add( new IconTab(Icons.get(Icons.DATA)){
-			@Override
-			protected void select(boolean value) {
-				super.select(value);
-				data.visible = data.active = value;
-				if (value) last_index = 2;
-			}
-		});
-
-		audio = new AudioTab();
-		audio.setSize(width, 0);
-		height = Math.max(height, audio.height());
-		add( audio );
-
-		add( new IconTab(Icons.get(Icons.AUDIO)){
-			@Override
-			protected void select(boolean value) {
-				super.select(value);
-				audio.visible = audio.active = value;
-				if (value) last_index = 3;
-			}
-		});
-
-		langs = new LangsTab();
-		langs.setSize(width, 0);
-		height = Math.max(height, langs.height());
-		add( langs );
-
-
-		IconTab langsTab = new IconTab(Icons.get(Icons.LANGS)){
-			@Override
-			protected void select(boolean value) {
-				super.select(value);
-				langs.visible = langs.active = value;
-				if (value) last_index = 4;
-			}
-
-			@Override
-			protected void createChildren() {
-				super.createChildren();
-				switch(Messages.lang().status()){
-					case INCOMPLETE:
-						icon.hardlight(1.5f, 0, 0);
-						break;
-					case UNREVIEWED:
-						icon.hardlight(1.5f, 0.75f, 0f);
-						break;
+			accessibleInterface.add( new RedButton( "Music Volume" ) {
+				@Override
+				protected void onClick() {
+					musicVolAccessible += 1;
+					if (musicVolAccessible > 10){
+						musicVolAccessible = 0;
+					}
+					SPDSettings.musicVol(musicVolAccessible);
+					StateReader.speechEventHandler.setMsg("Music Volume: " + musicVolAccessible);
 				}
-			}
+			});
+			accessibleInterface.add( new RedButton("Sound Effects Volume") {
+				@Override
+				protected void onClick() {
+					soundEffectsVolume += 1;
+					if (soundEffectsVolume > 10){
+						soundEffectsVolume = 0;
+					}
+					SPDSettings.SFXVol(soundEffectsVolume);
+					StateReader.speechEventHandler.setMsg("Sound Effects Volume: " + soundEffectsVolume);
 
-		};
-		add( langsTab );
+				}
+			});
+			accessibleInterface.create(this);
 
-		resize(width, (int)Math.ceil(height));
+		} else {
 
-		layoutTabs();
+			add(new IconTab(Icons.get(Icons.DISPLAY)) {
+				@Override
+				protected void select(boolean value) {
+					super.select(value);
+					display.visible = display.active = value;
+					if (value) last_index = 0;
+				}
+			});
 
-		select(last_index);
+			ui = new UITab();
+			ui.setSize(width, 0);
+			height = Math.max(height, ui.height());
+			add(ui);
 
+			add(new IconTab(Icons.get(Icons.PREFS)) {
+				@Override
+				protected void select(boolean value) {
+					super.select(value);
+					ui.visible = ui.active = value;
+					if (value) last_index = 1;
+				}
+			});
+
+			data = new DataTab();
+			data.setSize(width, 0);
+			height = Math.max(height, data.height());
+			add(data);
+
+			add(new IconTab(Icons.get(Icons.DATA)) {
+				@Override
+				protected void select(boolean value) {
+					super.select(value);
+					data.visible = data.active = value;
+					if (value) last_index = 2;
+				}
+			});
+
+			audio = new AudioTab();
+			audio.setSize(width, 0);
+			height = Math.max(height, audio.height());
+			add(audio);
+
+			add(new IconTab(Icons.get(Icons.AUDIO)) {
+				@Override
+				protected void select(boolean value) {
+					super.select(value);
+					audio.visible = audio.active = value;
+					if (value) last_index = 3;
+				}
+			});
+
+			langs = new LangsTab();
+			langs.setSize(width, 0);
+			height = Math.max(height, langs.height());
+			add(langs);
+
+
+			IconTab langsTab = new IconTab(Icons.get(Icons.LANGS)) {
+				@Override
+				protected void select(boolean value) {
+					super.select(value);
+					langs.visible = langs.active = value;
+					if (value) last_index = 4;
+				}
+
+				@Override
+				protected void createChildren() {
+					super.createChildren();
+					switch (Messages.lang().status()) {
+						case INCOMPLETE:
+							icon.hardlight(1.5f, 0, 0);
+							break;
+						case UNREVIEWED:
+							icon.hardlight(1.5f, 0.75f, 0f);
+							break;
+					}
+				}
+
+			};
+			add(langsTab);
+
+			resize(width, (int) Math.ceil(height));
+
+			layoutTabs();
+
+			select(last_index);
+
+		}
 	}
 
 	@Override
@@ -627,6 +663,7 @@ public class WndSettings extends WndTabbed {
 
 	private static class AudioTab extends Component {
 
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Audio Settings");
 		RenderedTextBlock title;
 		ColorBlock sep1;
 		OptionSlider optMusic;
@@ -645,6 +682,7 @@ public class WndSettings extends WndTabbed {
 
 			sep1 = new ColorBlock(1, 1, 0xFF000000);
 			add(sep1);
+
 
 			optMusic = new OptionSlider(Messages.get(this, "music_vol"), "0", "10", 0, 10) {
 				@Override

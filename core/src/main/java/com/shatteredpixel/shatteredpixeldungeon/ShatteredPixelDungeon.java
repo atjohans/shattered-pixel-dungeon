@@ -26,6 +26,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.WelcomeScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
@@ -151,11 +153,15 @@ public class ShatteredPixelDungeon extends Game {
 		Sample.INSTANCE.volume( SPDSettings.SFXVol()*SPDSettings.SFXVol()/100f );
 
 		Sample.INSTANCE.load( Assets.Sounds.all );
-		
+		StateReader.speechEventHandler.setMsg("Running in visual accessibility mode, click to scroll through buttons, double click to activate, triple click to go back");
 	}
 
 	@Override
 	public void finish() {
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
+			StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
+			StateReader.speechRecognitionHandler.dispatchKillEvent();
+		}
 		if (!DeviceCompat.isiOS()) {
 			super.finish();
 		} else {
@@ -216,6 +222,10 @@ public class ShatteredPixelDungeon extends Game {
 	public void destroy(){
 		super.destroy();
 		GameScene.endActorThread();
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
+			StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
+			StateReader.speechRecognitionHandler.dispatchKillEvent();
+		}
 	}
 	
 	public void updateDisplaySize(){

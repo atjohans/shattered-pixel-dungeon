@@ -150,6 +150,11 @@ public class textProcessor {
         synonymList.put("acquire", "grab");
         synonymList.put("pick", "grab");
 
+        synonymList.put("backpack", "inventory");
+        synonymList.put("bag", "inventory");
+        synonymList.put("stuff", "inventory");
+        synonymList.put("equipment", "inventory");
+
 
         //trouble with phonentically similar words
         synonymList.put("or", "door");

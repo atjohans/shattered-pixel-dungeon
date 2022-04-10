@@ -39,6 +39,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndChallenges;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHeroInfo;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
@@ -168,6 +169,8 @@ public class HeroSelectScene extends PixelScene {
 			curX += btnWidth;
 			add(button);
 			heroBtns.add(button);
+			if (ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(button);
 		}
 
 		challengeButton = new IconButton(
@@ -220,26 +223,14 @@ public class HeroSelectScene extends PixelScene {
 		}
 
 		if (ShatteredPixelDungeon.isAccessibilityMode){
-			for (Button button: heroBtns){
-				accessibleInterface.add(button);
-			}
 
 			accessibleInterface.add(btnExit);
-
-			accessibleInterface.add(startBtn);
-			accessibleInterface.add(infoButton);
-			accessibleInterface.add(challengeButton);
-
+			//TODO: add support for info and challenge button
 			infoButton.setName("info");
 			challengeButton.setName("Challenges");
 
-			for (Button button: accessibleInterface.menuButtons){
-				button.visible = false;
-			}
-			add(accessibleInterface);
-			accessibleInterface.setRect(0, 0, Camera.main.width, Camera.main.height);
-			align(accessibleInterface);
-			accessibleInterface.readName();
+
+			accessibleInterface.create(this);
 
 		}
 
@@ -347,10 +338,22 @@ public class HeroSelectScene extends PixelScene {
 			super.onClick();
 
 			if( !cl.isUnlocked() ){
-				ShatteredPixelDungeon.scene().addToFront( new WndMessage(cl.unlockMsg()));
+				if (ShatteredPixelDungeon.isAccessibilityMode)
+					StateReader.speechEventHandler.setMsg(cl.unlockMsg());
+				else
+					ShatteredPixelDungeon.scene().addToFront( new WndMessage(cl.unlockMsg()));
 			} else if (GamesInProgress.selectedClass == cl) {
-				ShatteredPixelDungeon.scene().add(new WndHeroInfo(cl));
+
+				if (ShatteredPixelDungeon.isAccessibilityMode){
+					startBtn.activate();
+				}else
+					ShatteredPixelDungeon.scene().add(new WndHeroInfo(cl));
 			} else {
+				if (ShatteredPixelDungeon.isAccessibilityMode) {
+					StateReader.speechEventHandler.setMsg(cl.name() + " Selected, double click to confirm");
+					StateReader.speechEventHandler.setMsg(cl.desc().replace("_", " "));
+
+				}
 				setSelectedHero(cl);
 			}
 		}

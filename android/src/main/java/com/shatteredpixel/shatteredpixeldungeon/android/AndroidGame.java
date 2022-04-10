@@ -30,8 +30,6 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -103,7 +101,6 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 					player.start();
 					player.release();
 					*/
-					((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
 
 					StateReader.busy = true;
 				}
@@ -117,7 +114,6 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 					if (speechRecognizer != null) {
 						speechRecognizer.destroy();
 						Log.i(LOG_TAG, "destroy");
-						((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
 
 					}
 				}
@@ -315,7 +311,6 @@ public class AndroidGame extends AndroidApplication implements RecognitionListen
 		StateReader.busy = false;
 		speechRecognizer.stopListening();
 		speechRecognizer.destroy();
-		((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE));
 		StateReader.handleCommand(text);
 	}
 

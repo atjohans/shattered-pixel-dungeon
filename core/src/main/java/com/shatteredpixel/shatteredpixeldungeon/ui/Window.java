@@ -23,8 +23,10 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.ShadowBox;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.input.KeyBindings;
 import com.watabou.input.KeyEvent;
 import com.watabou.input.PointerEvent;
@@ -65,56 +67,60 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 	public Window( int width, int height, int yOffset, NinePatch chrome ) {
 		super();
 
-		this.yOffset = yOffset;
-		
-		blocker = new PointerArea( 0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height ) {
-			@Override
-			protected void onClick( PointerEvent event ) {
-				if (Window.this.parent != null && !Window.this.chrome.overlapsScreenPoint(
-					(int) event.current.x,
-					(int) event.current.y )) {
-					
-					onBackPressed();
+		System.out.println(this.toString());
+
+		//Make all windows the width of the screen in accessibility mode to allow users to click anywhere
+					this.yOffset = yOffset;
+
+			blocker = new PointerArea(0, 0, PixelScene.uiCamera.width, PixelScene.uiCamera.height) {
+				@Override
+				protected void onClick(PointerEvent event) {
+					if (Window.this.parent != null && !Window.this.chrome.overlapsScreenPoint(
+							(int) event.current.x,
+							(int) event.current.y)) {
+
+						onBackPressed();
+					}
 				}
-			}
-		};
-		blocker.camera = PixelScene.uiCamera;
-		add( blocker );
-		
-		this.chrome = chrome;
+			};
+			blocker.camera = PixelScene.uiCamera;
+			add(blocker);
 
-		this.width = width;
-		this.height = height;
+			this.chrome = chrome;
+			this.width = width;
+			this.height = height;
 
-		shadow = new ShadowBox();
-		shadow.am = 0.5f;
-		shadow.camera = PixelScene.uiCamera.visible ?
-				PixelScene.uiCamera : Camera.main;
-		add( shadow );
+			shadow = new ShadowBox();
+			shadow.am = 0.5f;
+			shadow.camera = PixelScene.uiCamera.visible ?
+					PixelScene.uiCamera : Camera.main;
+			add(shadow);
 
-		chrome.x = -chrome.marginLeft();
-		chrome.y = -chrome.marginTop();
-		chrome.size(
-			width - chrome.x + chrome.marginRight(),
-			height - chrome.y + chrome.marginBottom() );
-		add( chrome );
-		
-		camera = new Camera( 0, 0,
-			(int)chrome.width,
-			(int)chrome.height,
-			PixelScene.defaultZoom );
-		camera.x = (int)(Game.width - camera.width * camera.zoom) / 2;
-		camera.y = (int)(Game.height - camera.height * camera.zoom) / 2;
-		camera.y -= yOffset * camera.zoom;
-		camera.scroll.set( chrome.x, chrome.y );
-		Camera.add( camera );
+			chrome.x = -chrome.marginLeft();
+			chrome.y = -chrome.marginTop();
+			chrome.size(
+					width - chrome.x + chrome.marginRight(),
+					height - chrome.y + chrome.marginBottom());
+			add(chrome);
 
-		shadow.boxRect(
-				camera.x / camera.zoom,
-				camera.y / camera.zoom,
-				chrome.width(), chrome.height );
+			camera = new Camera(0, 0,
+					(int) chrome.width,
+					(int) chrome.height,
+					PixelScene.defaultZoom);
+			camera.x = (int) (Game.width - camera.width * camera.zoom) / 2;
+			camera.y = (int) (Game.height - camera.height * camera.zoom) / 2;
+			camera.y -= yOffset * camera.zoom;
+			camera.scroll.set(chrome.x, chrome.y);
+			Camera.add(camera);
 
-		KeyEvent.addKeyListener( this );
+			shadow.boxRect(
+					camera.x / camera.zoom,
+					camera.y / camera.zoom,
+					chrome.width(), chrome.height);
+
+
+			KeyEvent.addKeyListener(this);
+
 	}
 	
 	public void resize( int w, int h ) {
@@ -170,6 +176,7 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 	}
 	
 	public void onBackPressed() {
+
 		hide();
 	}
 

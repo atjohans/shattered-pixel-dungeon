@@ -93,6 +93,8 @@ public class CellSelector extends ScrollArea {
     private boolean hasClickedTwice = false;
 
     protected void onDoubleClick() {
+
+
         System.out.println("DOUBLE CLICK");
         StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
         if (CommandMapper.lastCommand != null) {
@@ -110,15 +112,20 @@ public class CellSelector extends ScrollArea {
             StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
             StateReader.speechRecognitionHandler.dispatchListenEvent();
             StateReader.busy = true;
-        }else{
-            StateReader.speechRecognitionHandler.dispatchKillEvent();
-            StateReader.busy= false;
         }
     }
 
     @Override
     protected void onClick(PointerEvent event) {
         if (ShatteredPixelDungeon.isAccessibilityMode) {
+
+
+            StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
+            if(StateReader.busy){
+                StateReader.speechRecognitionHandler.dispatchKillEvent();
+                StateReader.busy= false;
+            }else{
+
             if (dragging) {
 
                 dragging = false;
@@ -156,7 +163,7 @@ public class CellSelector extends ScrollArea {
 
             }
 
-        } else {
+        } }else {
             if (dragging) {
 
                 dragging = false;

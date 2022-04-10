@@ -8,6 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
@@ -17,13 +18,18 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.CommandMapping.TextProcessing.textProcessor;
 import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTabbed;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndUseItem;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 
 public class CommandMapper {
@@ -36,31 +42,36 @@ public class CommandMapper {
     public static String lastCommand;
 
 
+    private static boolean checkLevelUpCommand(ArrayList<String> processedCommandList) {
 
-    private static boolean checkLevelUpCommand(ArrayList<String> processedCommandList){
-
-        if (processedCommandList.contains("level") && processedCommandList.contains("up")){
-
-
-            return true;
-
-        }
         return false;
     }
 
-    private static boolean checkSearchCommand(ArrayList<String> processedCommandList){
+    private static boolean checkMenuCommand(ArrayList<String> processedCommandList) {
 
-        if (processedCommandList.contains("search")){
+         if (processedCommandList.contains("menu")) {
+            GameScene.show(new WndGame());
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean checkSearchCommand(ArrayList<String> processedCommandList) {
+
+        if (processedCommandList.contains("search")) {
             Dungeon.hero.search(true);
             return true;
         }
 
         return false;
     }
-    private static boolean checkRestCommand(ArrayList<String> processedCommandList){
 
-        if (processedCommandList.contains("rest")){
-            if (processedCommandList.contains("full")){
+
+    private static boolean checkRestCommand(ArrayList<String> processedCommandList) {
+
+        if (processedCommandList.contains("rest")) {
+            if (processedCommandList.contains("full")) {
 
                 Dungeon.hero.rest(true);
                 return true;
@@ -76,7 +87,7 @@ public class CommandMapper {
 
         String direction = getDirection(processedCommandList);
         Item bestMatch = null;
-        Integer  curBest = 0;
+        Integer curBest = 0;
         int numMatching = 0;
         for (Item item : Dungeon.hero.belongings.backpack) {
 
@@ -91,7 +102,7 @@ public class CommandMapper {
 
         }
 
-        if (bestMatch == null){
+        if (bestMatch == null) {
             return false;
         }
         System.out.println("ASSUMING: " + bestMatch.name());
@@ -103,26 +114,23 @@ public class CommandMapper {
                 return true;
             }
 
-        }else  if (processedCommandList.contains("unequip")) {
+        } else if (processedCommandList.contains("unequip")) {
             if (bestMatch instanceof EquipableItem) {
                 ((EquipableItem) bestMatch).doUnequip(Dungeon.hero, true);
                 StateReader.speechEventHandler.setMsg(bestMatch.name() + " equipped");
                 return true;
             }
 
-        }  else if (processedCommandList.contains("drop")) {
+        } else if (processedCommandList.contains("drop")) {
             bestMatch.doDrop(Dungeon.hero);
             StateReader.speechEventHandler.setMsg("Dropped " + bestMatch.name());
             return true;
 
-        }
-        else if (processedCommandList.contains("info")) {
+        } else if (processedCommandList.contains("info")) {
             System.out.println("OK");
             StateReader.speechEventHandler.setMsg(bestMatch.info());
             return true;
-        }
-
-        else if (processedCommandList.contains("throw")) {
+        } else if (processedCommandList.contains("throw")) {
 
 
             for (Mob mob : Dungeon.hero.visibleEnemies) {
@@ -154,23 +162,36 @@ public class CommandMapper {
 
             return true;
 
-        }else if (processedCommandList.contains("eat")){
+        } else if (processedCommandList.contains("eat")) {
 
-            if (bestMatch instanceof Food){
+            if (bestMatch instanceof Food) {
 
-                ((Food)bestMatch).execute(Dungeon.hero,Food.AC_EAT);
-            }else{
+                ((Food) bestMatch).execute(Dungeon.hero, Food.AC_EAT);
+            } else {
                 StateReader.speechEventHandler.setMsg("Cannot eat " + bestMatch.name());
             }
-        return true;
-        }else if (processedCommandList.contains("drink")){
+            return true;
+        } else if (processedCommandList.contains("drink")) {
 
-            if (bestMatch instanceof Potion){
+            if (bestMatch instanceof Potion) {
 
                 ((Potion) bestMatch).execute(Dungeon.hero, Potion.AC_DRINK);
-            }else{
+            } else if (bestMatch instanceof Waterskin) {
+
+                ((Waterskin) bestMatch).execute(Dungeon.hero, Waterskin.AC_DRINK);
+
+            } else {
                 StateReader.speechEventHandler.setMsg("Cannot drink " + bestMatch.name());
             }
+            return true;
+        } else if (processedCommandList.contains("use")) {
+
+
+            StateReader.speechEventHandler.setMsg("Click to scroll through options, double click to activate, triple click to close");
+
+
+            WndBag tempBagWnd = (new WndBag(Dungeon.hero.belongings.backpack));
+            GameScene.show(new WndUseItem(tempBagWnd, bestMatch));
             return true;
         }
 
@@ -182,23 +203,19 @@ public class CommandMapper {
 
         if (processedCommandList.contains("inventory")) {
 
-            for (Item item : Dungeon.hero.belongings.backpack) {
-                StateReader.speechEventHandler.setMsg(item.name());
-            }
-
+            GameScene.show(new WndBag(Dungeon.hero.belongings.backpack));
             return true;
 
         }
         if (processedCommandList.contains("journal")) {
             return true;
         }
-        if (processedCommandList.contains("status")){
+        if (processedCommandList.contains("status")) {
 
-            StateReader.speechEventHandler.setMsg("Health at " + (int)(((float)Dungeon.hero.HP/ (float)Dungeon.hero.HT) * 100) + " percent");
+            StateReader.speechEventHandler.setMsg("Health at " + (int) (((float) Dungeon.hero.HP / (float) Dungeon.hero.HT) * 100) + " percent");
             return true;
 
         }
-
 
 
         return false;
@@ -229,8 +246,8 @@ public class CommandMapper {
                     if (direction == null) {
                         curBest = numMatching;
                         bestMatch = mob;
-                    }else{
-                        if (determineRelativePos(mob.pos).equals(direction)){
+                    } else {
+                        if (determineRelativePos(mob.pos).equals(direction)) {
                             curBest = numMatching;
                             bestMatch = mob;
                         }
@@ -239,7 +256,7 @@ public class CommandMapper {
 
             }
 
-            if (bestMatch == null ){
+            if (bestMatch == null) {
                 if (direction == null)
                     StateReader.speechEventHandler.setMsg("No matching mob nearby");
                 else
@@ -292,7 +309,7 @@ public class CommandMapper {
 
                 }
             }
-            if (bestMatch == null ){
+            if (bestMatch == null) {
                 if (direction == null)
                     StateReader.speechEventHandler.setMsg("No matching item nearby");
                 else
@@ -401,12 +418,12 @@ public class CommandMapper {
 
         if (processedCommandList.contains("look")) {
 
-            if (processedCommandList.contains("enemy")|| processedCommandList.contains("enemies")) {
+            if (processedCommandList.contains("enemy") || processedCommandList.contains("enemies")) {
 
                 VoiceCommands.voiceLookEnemies();
                 return true;
             }
-            if (processedCommandList.contains("door")|| processedCommandList.contains("doors")) {
+            if (processedCommandList.contains("door") || processedCommandList.contains("doors")) {
 
                 VoiceCommands.voiceLookDoors();
                 return true;
@@ -448,6 +465,17 @@ public class CommandMapper {
 
         //ORDER MATTERS FOR CONDITION CHECKS - Move command is most general, so we put at bottom
         if (Dungeon.hero.isAlive()) {
+
+            if (checkLevelUpCommand(processedCommandList)) {
+                System.out.println("LEVELUP COMMAND");
+                lastCommand = command;
+                return;
+            }
+            if (checkMenuCommand(processedCommandList)) {
+                System.out.println("MENU COMMAND");
+                lastCommand = command;
+                return;
+            }
             if (checkAttackCommand(processedCommandList)) {
                 System.out.println("ATTACK COMMAND");
                 lastCommand = command;
@@ -508,12 +536,12 @@ public class CommandMapper {
     /*-----HELPER FUNCTIONS-----*/
 
 
-    private static int numMatching(ArrayList<String> tester, ArrayList<String> toCheck){
+    private static int numMatching(ArrayList<String> tester, ArrayList<String> toCheck) {
 
         int numContained = 0;
-        for (String elt: tester ){
+        for (String elt : tester) {
 
-            if (toCheck.contains(elt)){
+            if (toCheck.contains(elt)) {
                 numContained += 1;
             }
 

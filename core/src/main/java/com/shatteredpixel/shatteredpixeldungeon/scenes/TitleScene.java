@@ -251,11 +251,7 @@ public class TitleScene extends PixelScene {
 		add( version );
 
 		if (ShatteredPixelDungeon.isAccessibilityMode){
-			accessibleInterface.readName();
-			StateReader.speechEventHandler.setMsg("Running in Visual Accessibility Mode. Click to Scroll Through Buttons. Double Click to Activate. Triple Click to immediately go back");
-			add(accessibleInterface);
-			accessibleInterface.setRect(0, 0, w, h);
-			align(accessibleInterface);
+			accessibleInterface.create(this);
 		}
 
 		fadeIn();

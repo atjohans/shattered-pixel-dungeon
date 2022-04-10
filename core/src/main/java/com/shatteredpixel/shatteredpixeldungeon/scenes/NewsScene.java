@@ -163,13 +163,6 @@ public class NewsScene extends PixelScene {
 		add(btnSite);
 
 
-		if (ShatteredPixelDungeon.isAccessibilityMode){
-
-			accessibleInterface.add(btnSite);
-
-
-		}
-
 
 	}
 

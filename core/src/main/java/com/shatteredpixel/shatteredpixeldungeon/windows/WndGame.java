@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -31,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.RankingsScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.services.updates.Updates;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
@@ -47,9 +49,10 @@ public class WndGame extends Window {
 	private int pos;
 	
 	public WndGame() {
-		
+
 		super();
 
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Pause Menu");
 		//settings
 		RedButton curBtn;
 		addButton( curBtn = new RedButton( Messages.get(this, "settings") ) {
@@ -61,6 +64,8 @@ public class WndGame extends Window {
 		});
 		curBtn.icon(Icons.get(Icons.PREFS));
 
+		if(ShatteredPixelDungeon.isAccessibilityMode)
+			accessibleInterface.add(curBtn);
 		//install prompt
 		if (Updates.isInstallable()){
 			addButton( curBtn = new RedButton( Messages.get(this, "install") ) {
@@ -71,6 +76,8 @@ public class WndGame extends Window {
 			} );
 			curBtn.textColor(Window.SHPX_COLOR);
 			curBtn.icon(Icons.get(Icons.CHANGES));
+			if(ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(curBtn);
 		}
 
 		// Challenges window
@@ -83,6 +90,8 @@ public class WndGame extends Window {
 				}
 			} );
 			curBtn.icon(Icons.get(Icons.CHALLENGE_ON));
+			if(ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(curBtn);
 		}
 
 		// Restart
@@ -96,10 +105,16 @@ public class WndGame extends Window {
 					GamesInProgress.curSlot = GamesInProgress.firstEmpty();
 					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
 				}
-			} );
+			}
+
+			);
+
 			curBtn.icon(Icons.get(Icons.ENTER));
 			curBtn.textColor(Window.TITLE_COLOR);
-			
+
+			if(ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(curBtn);
+
 			addButton( curBtn = new RedButton( Messages.get(this, "rankings") ) {
 				@Override
 				protected void onClick() {
@@ -108,6 +123,9 @@ public class WndGame extends Window {
 				}
 			} );
 			curBtn.icon(Icons.get(Icons.RANKINGS));
+
+			if(ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(curBtn);
 		}
 
 		// Main menu
@@ -124,7 +142,14 @@ public class WndGame extends Window {
 		} );
 		curBtn.icon(Icons.get(Icons.DISPLAY));
 
+		if(ShatteredPixelDungeon.isAccessibilityMode)
+			accessibleInterface.add(curBtn);
+
 		resize( WIDTH, pos );
+
+		if (ShatteredPixelDungeon.isAccessibilityMode)
+			accessibleInterface.create(this);
+
 	}
 	
 	private void addButton( RedButton btn ) {

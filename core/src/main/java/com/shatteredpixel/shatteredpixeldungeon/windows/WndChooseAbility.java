@@ -21,7 +21,9 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
 import com.shatteredpixel.shatteredpixeldungeon.items.KingsCrown;
@@ -30,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -46,7 +49,7 @@ public class WndChooseAbility extends Window {
 	public WndChooseAbility(final KingsCrown crown, final Armor armor, final Hero hero){
 
 		super();
-
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Choose Ability");
 		//crown can be null if hero is choosing from armor, pre-0.9.3 saves
 		IconTitle titlebar = new IconTitle();
 		titlebar.icon( new ItemSprite( crown == null ? armor.image() : crown.image(), null ) );
@@ -106,6 +109,8 @@ public class WndChooseAbility extends Window {
 			add(abilityInfo);
 
 			pos = abilityButton.bottom() + GAP;
+			if (ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(abilityButton);
 		}
 
 		RedButton cancelButton = new RedButton(Messages.get(this, "cancel")){
@@ -118,7 +123,16 @@ public class WndChooseAbility extends Window {
 		add(cancelButton);
 		pos = cancelButton.bottom() + GAP;
 
+
+
 		resize(WIDTH, (int)pos);
+
+
+		if(ShatteredPixelDungeon.isAccessibilityMode) {
+			accessibleInterface.add(cancelButton);
+			accessibleInterface.create(this);
+		}
+
 
 	}
 

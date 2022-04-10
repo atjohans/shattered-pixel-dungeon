@@ -23,10 +23,12 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.input.PointerEvent;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
@@ -125,7 +127,12 @@ public class WndStory extends Window {
 			}
 			
 			Game.scene().add( wnd );
-			
+
+			if(ShatteredPixelDungeon.isAccessibilityMode){
+				StateReader.speechEventHandler.setMsg(text);
+				StateReader.speechEventHandler.setMsg("Click to Continue");
+			}
+
 			Dungeon.chapters.add( id );
 		}
 	}

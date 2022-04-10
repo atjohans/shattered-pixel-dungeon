@@ -22,8 +22,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LostInventory;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -40,6 +42,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
@@ -49,6 +52,7 @@ import com.watabou.gltextures.TextureCache;
 import com.watabou.input.KeyBindings;
 import com.watabou.input.KeyEvent;
 import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
@@ -58,6 +62,7 @@ public class WndBag extends WndTabbed {
 	
 	//only one bag window can appear at a time
 	public static Window INSTANCE;
+
 
 	protected static final int COLS_P   = 5;
 	protected static final int COLS_L   = 5;
@@ -86,14 +91,20 @@ public class WndBag extends WndTabbed {
 	
 	private static Bag lastBag;
 
+	public ItemSelector getItemSelector(){
+		return this.selector;
+	}
+	AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Inventory");
+
 	public WndBag( Bag bag ) {
 		this(bag, null);
 	}
 
 	public WndBag( Bag bag, ItemSelector selector ) {
-		
+
 		super();
-		
+
+
 		if( INSTANCE != null ){
 			INSTANCE.hide();
 		}
@@ -139,6 +150,12 @@ public class WndBag extends WndTabbed {
 		}
 
 		layoutTabs();
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+			accessibleInterface.create(this);
+		}
+
+
 	}
 	
 	public static WndBag lastBag( ItemSelector selector ) {
@@ -270,9 +287,13 @@ public class WndBag extends WndTabbed {
 		
 		int x = col * (slotWidth + SLOT_MARGIN);
 		int y = TITLE_HEIGHT + row * (slotHeight + SLOT_MARGIN);
-		
-		add( new ItemButton( item ).setPos( x, y ) );
-		
+
+			ItemButton itemButton = new ItemButton(item);
+			itemButton.setPos(x,y);
+			add(itemButton);
+			if (ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(itemButton);
+
 		if (++col >= nCols) {
 			col = 0;
 			row++;
@@ -365,14 +386,18 @@ public class WndBag extends WndTabbed {
 		}
 	}
 	
-	private class ItemButton extends ItemSlot {
+	public class ItemButton extends ItemSlot {
 		
 		private static final int NORMAL		= 0x9953564D;
 		private static final int EQUIPPED	= 0x9991938C;
 		
 		private Item item;
 		private ColorBlock bg;
-		
+
+		public Item getItem(){
+			return this.item;
+		}
+
 		public ItemButton( Item item ) {
 			
 			super( item );

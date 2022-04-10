@@ -21,13 +21,19 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.AccessibleInterface;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.watabou.noosa.Camera;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.ui.Button;
 
 public class WndOptions extends Window {
 
@@ -36,14 +42,20 @@ public class WndOptions extends Window {
 
 	private static final int MARGIN 		= 2;
 	private static final int BUTTON_HEIGHT	= 18;
+	AccessibleInterface accessibleInterface;
 
 	public WndOptions(Image icon, String title, String message, String... options) {
 		super();
-
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
+
+		if (title == null){
+			accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR,"","Option");
+		}
 
 		float pos = 0;
 		if (title != null) {
+			accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR,"",title);
+
 			IconTitle tfTitle = new IconTitle(icon, title);
 			tfTitle.setRect(0, pos, width, 0);
 			add(tfTitle);
@@ -53,14 +65,20 @@ public class WndOptions extends Window {
 
 		layoutBody(pos, message, options);
 	}
-	
+
 	public WndOptions( String title, String message, String... options ) {
 		super();
 
 		int width = PixelScene.landscape() ? WIDTH_L : WIDTH_P;
 
+		if (title == null){
+			accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR,"","Option");
+		}
+
 		float pos = MARGIN;
 		if (title != null) {
+			accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR,"",title);
+
 			RenderedTextBlock tfTitle = PixelScene.renderTextBlock(title, 9);
 			tfTitle.hardlight(TITLE_COLOR);
 			tfTitle.setPos(MARGIN, pos);
@@ -95,7 +113,8 @@ public class WndOptions extends Window {
 			if (hasIcon(i)) btn.icon(getIcon(i));
 			btn.enable(enabled(i));
 			add( btn );
-
+			if (ShatteredPixelDungeon.isAccessibilityMode)
+				accessibleInterface.add(btn);
 			if (!hasInfo(i)) {
 				btn.setRect(0, pos, width, BUTTON_HEIGHT);
 			} else {
@@ -107,6 +126,8 @@ public class WndOptions extends Window {
 					}
 				};
 				info.setRect(width-BUTTON_HEIGHT, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
+
+				accessibleInterface.add(info);
 				add(info);
 			}
 
@@ -114,6 +135,11 @@ public class WndOptions extends Window {
 		}
 
 		resize( width, (int)(pos - MARGIN) );
+
+		if (ShatteredPixelDungeon.isAccessibilityMode){
+			accessibleInterface.create(this);
+		}
+
 	}
 
 	protected boolean enabled( int index ){

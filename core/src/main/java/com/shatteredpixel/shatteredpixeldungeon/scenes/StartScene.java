@@ -96,9 +96,11 @@ public class StartScene extends PixelScene {
 			yPos += SLOT_HEIGHT + slotGap;
 			if (ShatteredPixelDungeon.isAccessibilityMode && accessibleInterface != null){
 				accessibleInterface.add(existingGame);
-			}
+			}else {
 				align(existingGame);
 				add(existingGame);
+			}
+
 		}
 		
 		if (games.size() < GamesInProgress.MAX_SLOTS){
@@ -108,10 +110,10 @@ public class StartScene extends PixelScene {
 			yPos += SLOT_HEIGHT + slotGap;
 			if (ShatteredPixelDungeon.isAccessibilityMode && accessibleInterface != null){
 				accessibleInterface.add(newGame);
-			}
+			}else {
 				align(newGame);
 				add(newGame);
-
+			}
 		}
 		
 		GamesInProgress.curSlot = 0;
@@ -122,14 +124,7 @@ public class StartScene extends PixelScene {
 
 			accessibleInterface.add(btnExit);
 
-			for (Button button: accessibleInterface.menuButtons){
-				button.visible = false;
-			}
-
-			accessibleInterface.readName();
-			add(accessibleInterface);
-			accessibleInterface.setRect(0, 0, w, h);
-			align(accessibleInterface);
+			accessibleInterface.create(this);
 
 		}
 
