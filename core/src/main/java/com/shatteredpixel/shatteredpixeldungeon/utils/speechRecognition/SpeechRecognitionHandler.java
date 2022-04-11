@@ -21,11 +21,12 @@ public class SpeechRecognitionHandler {
     public void dispatchListenEvent(){
         if (!StateReader.busy) {
             for (SpeechRecognitionListener l : listeners) {
-                    l.execute();
+                    l.getCommand();
 
             }
         }
     }
+
     public void dispatchKillEvent(){
         for (SpeechRecognitionListener l : listeners) {
             l.kill();

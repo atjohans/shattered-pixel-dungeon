@@ -94,6 +94,21 @@ public class SpiritBow extends Weapon {
 		}
 	}
 
+	//used to bypass cell selector in accessibility mode
+	public void execute(Hero hero, Char target, String action) {
+
+		super.execute(hero, action);
+
+		if (action.equals(AC_SHOOT)) {
+
+			curUser = hero;
+			curItem = this;
+			shooter.onSelect(target.pos);
+
+		}
+	}
+
+
 	private static Class[] harmfulPlants = new Class[]{
 			Blindweed.class, Firebloom.class, Icecap.class, Sorrowmoss.class,  Stormvine.class
 	};

@@ -32,7 +32,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.CommandMapping.CommandMapper;
-import com.shatteredpixel.shatteredpixeldungeon.utils.CommandMapping.VoiceCommands;
 import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.input.GameAction;
 import com.watabou.input.KeyBindings;

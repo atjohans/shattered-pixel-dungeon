@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
+import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -36,7 +37,9 @@ import com.watabou.noosa.ui.Component;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
+
 public class TalentsPane extends ScrollPane {
+
 
 	ArrayList<TalentTierPane> panes = new ArrayList<>();
 	ArrayList<ColorBlock> separators = new ArrayList<>();
@@ -45,12 +48,15 @@ public class TalentsPane extends ScrollPane {
 	ColorBlock blocker;
 	RenderedTextBlock blockText;
 
+
 	public TalentsPane( TalentButton.Mode mode ) {
 		this( mode, Dungeon.hero.talents );
 	}
 
 	public TalentsPane( TalentButton.Mode mode, ArrayList<LinkedHashMap<Talent, Integer>> talents ) {
 		super(new Component());
+
+
 
 		int tiersAvailable = 1;
 
@@ -150,6 +156,7 @@ public class TalentsPane extends ScrollPane {
 
 	public static class TalentTierPane extends Component {
 
+
 		private int tier;
 
 		public RenderedTextBlock title;
@@ -182,7 +189,9 @@ public class TalentsPane extends ScrollPane {
 				};
 				buttons.add(btn);
 				add(btn);
+
 			}
+
 
 		}
 

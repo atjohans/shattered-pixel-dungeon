@@ -92,6 +92,10 @@ public class AccessibleInterface extends StyledButton {
             } else {
                 StateReader.speechEventHandler.setMsg(((WndBag.ItemButton) currentMenuButton).getItem().name());
             }
+        }else if (currentMenuButton instanceof TalentButton){
+
+            StateReader.speechEventHandler.setMsg(((TalentButton)currentMenuButton).talent.name().replace("_"," "));
+
         }
     }
 
@@ -104,6 +108,13 @@ public class AccessibleInterface extends StyledButton {
             containingWindow.height = PixelScene.uiCamera.height;
             containingWindow.resize(containingWindow.width, containingWindow.height);
             containingWindow.visible = false;
+        }
+
+        else if (container instanceof Component){
+
+            Component containingComponent = (Component)container;
+            //containingComponent = containingComponent.setRect(0,0,PixelScene.uiCamera.width,PixelScene.uiCamera.height);
+            //containingComponent.visible = false;
         }
 
         this.replaceInterface();

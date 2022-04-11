@@ -127,7 +127,8 @@ public class WndOptions extends Window {
 				};
 				info.setRect(width-BUTTON_HEIGHT, pos, BUTTON_HEIGHT, BUTTON_HEIGHT);
 
-				accessibleInterface.add(info);
+				if (ShatteredPixelDungeon.isAccessibilityMode)
+					accessibleInterface.add(info);
 				add(info);
 			}
 

@@ -50,7 +50,7 @@ public class WndUseItem extends WndInfoItem {
 
 		this.owner = owner;
 
-		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "", "Use " + item.name());
+		AccessibleInterface accessibleInterface = new AccessibleInterface(Chrome.Type.GREY_BUTTON_TR, "",  item.name() + " options");
 
 		float y = height;
 		if (ShatteredPixelDungeon.isAccessibilityMode)

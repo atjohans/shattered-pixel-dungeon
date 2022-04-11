@@ -1305,7 +1305,7 @@ public class Hero extends Char {
 		if (newMob) {
 			interrupt();
 			if (ShatteredPixelDungeon.isAccessibilityMode){
-				StateReader.speechEventHandler.setMsg("A " + newMobInstance.name() + " has appeared to the " + CommandMapper.determineRelativePos(newMobInstance.pos));
+				StateReader.speechEventHandler.setMsg("A " + newMobInstance.name() + " has appeared " + CommandMapper.determineRelativePos(newMobInstance.pos));
 			}
 			if (resting){
 				Dungeon.observe();

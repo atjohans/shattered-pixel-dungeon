@@ -3,15 +3,27 @@ package com.shatteredpixel.shatteredpixeldungeon.utils.CommandMapping;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArcaneArmor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.DamageWand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Crossbow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
@@ -48,12 +60,10 @@ public class CommandMapper {
     }
 
     private static boolean checkMenuCommand(ArrayList<String> processedCommandList) {
-
-         if (processedCommandList.contains("menu")) {
+        if (processedCommandList.contains("menu")) {
             GameScene.show(new WndGame());
             return true;
         }
-
         return false;
     }
 
@@ -86,7 +96,7 @@ public class CommandMapper {
     private static boolean checkItemCommand(ArrayList<String> processedCommandList) {
 
         String direction = getDirection(processedCommandList);
-        Item bestMatch = null;
+        Item bestMatch = (Item) bestMatching("item", direction, processedCommandList);
         Integer curBest = 0;
         int numMatching = 0;
         for (Item item : Dungeon.hero.belongings.backpack) {
@@ -127,7 +137,6 @@ public class CommandMapper {
             return true;
 
         } else if (processedCommandList.contains("info")) {
-            System.out.println("OK");
             StateReader.speechEventHandler.setMsg(bestMatch.info());
             return true;
         } else if (processedCommandList.contains("throw")) {
@@ -155,7 +164,7 @@ public class CommandMapper {
             }
 
             if (direction != null) {
-                StateReader.speechEventHandler.setMsg("No mob to target to the " + direction);
+                StateReader.speechEventHandler.setMsg("No mob to target " + direction);
             } else {
                 StateReader.speechEventHandler.setMsg("No mob of name to target");
             }
@@ -211,65 +220,51 @@ public class CommandMapper {
             return true;
         }
         if (processedCommandList.contains("status")) {
-
             StateReader.speechEventHandler.setMsg("Health at " + (int) (((float) Dungeon.hero.HP / (float) Dungeon.hero.HT) * 100) + " percent");
             return true;
-
         }
-
-
         return false;
     }
 
 
     private static boolean checkAttackCommand(ArrayList<String> processedCommandList) {
 
-        if (processedCommandList.contains("attack")) {
-
+        if (processedCommandList.contains("attack") || processedCommandList.contains("shoot")) {
             if (Dungeon.hero.visibleEnemies.size() == 0) {
-
                 StateReader.speechEventHandler.setMsg("No visible enemies");
                 return true;
             }
-
-
             String direction = getDirection(processedCommandList);
-            Mob bestMatch = null;
-            Integer curBest = 0;
-            int numMatching = 0;
-            for (Mob mob : Dungeon.hero.visibleEnemies) {
-
-                ArrayList<String> mobNameElts = new ArrayList<>(Arrays.asList(mob.name().toLowerCase(Locale.ROOT).split("\\s+")));
-
-                numMatching = numMatching(mobNameElts, processedCommandList);
-                if (numMatching > 0 && numMatching > curBest) {
-                    if (direction == null) {
-                        curBest = numMatching;
-                        bestMatch = mob;
-                    } else {
-                        if (determineRelativePos(mob.pos).equals(direction)) {
-                            curBest = numMatching;
-                            bestMatch = mob;
-                        }
-                    }
-                }
-
-            }
-
+            Mob bestMatch = (Mob) bestMatching("mob", direction, processedCommandList);
             if (bestMatch == null) {
                 if (direction == null)
                     StateReader.speechEventHandler.setMsg("No matching mob nearby");
                 else
-                    StateReader.speechEventHandler.setMsg("No matching mob to the " + direction);
+                    StateReader.speechEventHandler.setMsg("No matching mob  " + direction);
                 return true;
             }
 
+            if (processedCommandList.contains("attack")) {
+                Dungeon.hero.handle(bestMatch.pos);
+                Dungeon.hero.act();
+                Dungeon.hero.next();
+            } else {
 
-            Dungeon.hero.handle(bestMatch.pos);
-            Dungeon.hero.act();
-            Dungeon.hero.next();
+                //pobably a better way to do this than enumerating possible weapons
+                KindOfWeapon weapon = Dungeon.hero.belongings.weapon();
+                if (weapon instanceof MagesStaff){
+
+                    if (((MagesStaff) weapon).getWand().curCharges > 0) {
+                        ((MagesStaff) weapon).getWand().execute(Dungeon.hero, bestMatch, ((MagesStaff) weapon).getWand().defaultAction);
+                    }else{
+                        StateReader.speechEventHandler.setMsg("Staff Wand out of Charge");
+                    }
+                }
+                else if (weapon instanceof SpiritBow){
+                    ((SpiritBow)weapon).execute(Dungeon.hero, bestMatch,weapon.defaultAction);
+                }
+            }
             return true;
-
         }
         return false;
     }
@@ -286,119 +281,40 @@ public class CommandMapper {
                 StateReader.speechEventHandler.setMsg("No visible items");
                 return true;
             }
-
-            Heap bestMatch = null;
-            Integer curBest = 0;
-            int numMatching = 0;
-            for (Heap heap : Dungeon.level.heaps.valueList()) {
-                if (Dungeon.hero.fieldOfView[heap.pos]) {
-                    ArrayList<String> mobNameElts = new ArrayList<>(Arrays.asList(heap.toString().toLowerCase(Locale.ROOT).split("\\s+")));
-
-                    numMatching = numMatching(mobNameElts, processedCommandList);
-                    if (numMatching > 0 && numMatching > curBest) {
-                        if (direction == null) {
-                            curBest = numMatching;
-                            bestMatch = heap;
-                        } else {
-                            if (determineRelativePos(heap.pos).equals(direction)) {
-                                curBest = numMatching;
-                                bestMatch = heap;
-                            }
-                        }
-                    }
-
-                }
-            }
+            Heap bestMatch = (Heap) bestMatching("heap", direction, processedCommandList);
             if (bestMatch == null) {
                 if (direction == null)
                     StateReader.speechEventHandler.setMsg("No matching item nearby");
                 else
-                    StateReader.speechEventHandler.setMsg("No matching item to the " + direction);
+                    StateReader.speechEventHandler.setMsg("No matching item " + direction);
                 return true;
             }
-
-
+            System.out.println("Grabbing Item");
             Dungeon.hero.handle(bestMatch.pos);
             Dungeon.hero.act();
             Dungeon.hero.next();
             return true;
-
-
         }
         return false;
     }
 
-    private static boolean checkMoveCommand(ArrayList<String> processedCommandList) {
-
+    private static boolean bestGuess(ArrayList<String> processedCommandList) {
 
         String direction = getDirection(processedCommandList);
-        String keyword = null;
+        //check for enemy name
+        Mob bestMob = (Mob) bestMatching("mob", direction, processedCommandList);
 
-        HashMap<String, Integer> instanceCount = new HashMap<>();
-        int tracker = -1;
-        //iterate over the field of view, check if any game objects match the input
-        for (int i = 0; i < Dungeon.level.map.length; ++i) {
-            String tileName = tileToString(i);
-            if (!(Dungeon.hero.fieldOfView == null) && Dungeon.hero.fieldOfView[i]) {
-                for (String cmd : processedCommandList) {
-                    for (String nameElt : tileName.split("\\s+")) {
-                        if (cmd.contains(nameElt)) {
-                            keyword = nameElt;
-                            tracker = i;
-                            if (direction != null && direction.equals(determineRelativePos(i))) {
-                                Dungeon.hero.handle(i);
-                                Dungeon.hero.act();
-                                Dungeon.hero.next();
-                                return true;
-                            }
-
-                            if (instanceCount.containsKey(tileName)) {
-                                instanceCount.put(tileName, instanceCount.get(tileName) + 1);
-                            } else {
-                                instanceCount.put(tileName, 1);
-                            }
-
-                        }
-                    }
-                }
-            }
+        if (bestMob != null) {
+            processedCommandList.add("attack");
+            return checkAttackCommand(processedCommandList);
         }
 
-        if (keyword == null && direction != null) {
-            VoiceCommands.voiceMoveInDirection(direction);
-            return true;
+        Heap bestHeap = (Heap) bestMatching("heap", direction, processedCommandList);
+        if (bestHeap != null) {
+            processedCommandList.add("grab");
+            return checkGrabCommand(processedCommandList);
         }
 
-        //if we have checked all visible tiles and no match is found
-        if (instanceCount.size() > 0) {
-
-            if (direction != null) {
-
-                StateReader.speechEventHandler.setMsg("No " + keyword + "s to the " + direction);
-                return true;
-
-            } else {
-
-                if (instanceCount.containsKey(tileToString(tracker))) {
-
-                    if (instanceCount.get(tileToString(tracker)) == 1) {
-                        Dungeon.hero.handle(tracker);
-                        Dungeon.hero.act();
-                        Dungeon.hero.next();
-                        return true;
-
-                    }
-
-                }
-
-                StateReader.speechEventHandler.setMsg("Multiple " + keyword + "s visible, specify direction");
-                return true;
-
-            }
-
-        }
-
-        //wasn't a move command
         return false;
     }
 
@@ -442,7 +358,12 @@ public class CommandMapper {
                 return true;
 
             }
+            if (processedCommandList.contains(("traps"))) {
+                System.out.println("LOOK ROOM");
+                VoiceCommands.voiceLookTraps();
+                return true;
 
+            }
             VoiceCommands.voiceReadScene();
             return true;
 
@@ -453,6 +374,64 @@ public class CommandMapper {
 
     }
 
+    private static boolean checkMoveCommand(ArrayList<String> processedCommandList) {
+
+        String direction = getDirection(processedCommandList);
+
+        if (processedCommandList.contains("exit") || processedCommandList.contains("entrance")){
+
+            for (int i = 0; i < Dungeon.level.map.length; ++i){
+
+
+                if (Dungeon.hero.fieldOfView[i] && (Dungeon.level.map[i] == Terrain.EXIT || Dungeon.level.map[i] == Terrain.ENTRANCE)){
+
+                    Dungeon.hero.handle(i);
+                    Dungeon.hero.act();
+                    Dungeon.hero.next();
+                    return true;
+                }
+
+
+            }
+
+
+        }
+
+        if (direction != null) {
+
+            VoiceCommands.voiceMoveInDirection(direction);
+
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean checkHelpCommand(ArrayList<String> processedCommandList) {
+
+        if (processedCommandList.contains("help")) {
+
+            StateReader.speechEventHandler.setMsg("Swipe on the screen to move in that direction");
+
+            StateReader.speechEventHandler.setMsg("Single click to initiate voice recognition");
+
+            StateReader.speechEventHandler.setMsg("Use voice commands to grab items, attack and use certain items");
+
+            StateReader.speechEventHandler.setMsg("A typical voice command specifies an object name, and an action such as attack or grab. You can also provide a direction");
+
+            StateReader.speechEventHandler.setMsg("Examine the dungeon by using the look command");
+
+            StateReader.speechEventHandler.setMsg("Double click the screen to repeat a command");
+
+            StateReader.speechEventHandler.setMsg("You can also use voice commands to open windows, such as your inventory or the pause menu");
+
+            StateReader.speechEventHandler.setMsg("Navigate through these windows by clicking to scroll through options, double click to activate, and triple click to go back");
+
+
+            return true;
+        }
+
+        return false;
+    }
 
     public static void mapCommand(String command) {
         if (!Dungeon.hero.ready) {
@@ -462,17 +441,22 @@ public class CommandMapper {
 
         System.out.println(processedCommandList);
 
+        if (checkMenuCommand(processedCommandList)) {
+            System.out.println("MENU COMMAND");
+            lastCommand = command;
+            return;
+        }
+        if (checkHelpCommand(processedCommandList)) {
+            System.out.println("HELP COMMAND");
+            lastCommand = command;
+            return;
+        }
 
         //ORDER MATTERS FOR CONDITION CHECKS - Move command is most general, so we put at bottom
         if (Dungeon.hero.isAlive()) {
 
             if (checkLevelUpCommand(processedCommandList)) {
                 System.out.println("LEVELUP COMMAND");
-                lastCommand = command;
-                return;
-            }
-            if (checkMenuCommand(processedCommandList)) {
-                System.out.println("MENU COMMAND");
                 lastCommand = command;
                 return;
             }
@@ -516,25 +500,145 @@ public class CommandMapper {
             if (checkGrabCommand(processedCommandList)) {
                 System.out.println("GRAB COMMAND");
                 lastCommand = command;
-
                 return;
             }
             if (checkMoveCommand(processedCommandList)) {
                 System.out.println("MOVE COMMAND");
                 lastCommand = command;
-
+                return;
+            }
+            if (bestGuess(processedCommandList)) {
+                System.out.println("GUESS COMMAND");
+                lastCommand = command;
                 return;
             }
         }
 
 
-        StateReader.speechEventHandler.setMsg("Unknown Command, please repeat");
+        StateReader.speechEventHandler.setMsg("Unknown Command, " + command + "please repeat");
+
     }
+
+
 
 
 
     /*-----HELPER FUNCTIONS-----*/
 
+    private static Object bestMatching(String objType, String direction, ArrayList<String> processedCommandList) {
+
+        Integer curBest = 0;
+        ArrayList<String> entityNameElts;
+        int numMatching = 0;
+
+        if (objType.equals("heap")) {
+            Heap bestMatch = null;
+            for (Heap heap : Dungeon.level.heaps.valueList()) {
+                entityNameElts = new ArrayList<>(Arrays.asList(heap.toString().toLowerCase(Locale.ROOT).split("\\s+")));
+                numMatching = numMatching(entityNameElts, processedCommandList);
+                if (numMatching > 0 && numMatching > curBest) {
+                    if (direction == null) {
+                        if (bestMatch == null) {
+                            bestMatch = heap;
+                            curBest = numMatching;
+                        } else {
+
+                            if (determineDistanceToHero(heap.pos) < determineDistanceToHero(bestMatch.pos)) {
+                                bestMatch = heap;
+                                curBest = numMatching;
+                            }
+
+                        }
+                    } else {
+                        if (determineRelativePos(heap.pos).equals(direction)) {
+                            if (bestMatch == null) {
+                                bestMatch = heap;
+                                curBest = numMatching;
+                            } else {
+
+                                if (determineDistanceToHero(heap.pos) < determineDistanceToHero(bestMatch.pos)) {
+                                    bestMatch = heap;
+                                    curBest = numMatching;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            return bestMatch;
+
+        } else if (objType.equals("mob")) {
+            Mob bestMatch = null;
+            for (Mob mob : Dungeon.hero.visibleEnemies) {
+                entityNameElts = new ArrayList<>(Arrays.asList(mob.name().toLowerCase(Locale.ROOT).split("\\s+")));
+                numMatching = numMatching(entityNameElts, processedCommandList);
+                if (numMatching > 0 && numMatching > curBest) {
+                    if (direction == null) {
+                        if (bestMatch == null) {
+                            bestMatch = mob;
+                            curBest = numMatching;
+                        } else {
+
+                            if (determineDistanceToHero(mob.pos) < determineDistanceToHero(bestMatch.pos)) {
+                                bestMatch = mob;
+                                curBest = numMatching;
+                            }
+
+                        }
+                    } else {
+                        if (determineRelativePos(mob.pos).equals(direction)) {
+                            if (bestMatch == null) {
+                                bestMatch = mob;
+                                curBest = numMatching;
+                            } else {
+
+                                if (determineDistanceToHero(mob.pos) < determineDistanceToHero(bestMatch.pos)) {
+                                    bestMatch = mob;
+                                    curBest = numMatching;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            return bestMatch;
+
+        } else if (objType.equals("item")) {
+            Item bestMatch = null;
+            for (Item item : Dungeon.hero.belongings.backpack) {
+
+                ArrayList<String> itemNameElts = new ArrayList<>(Arrays.asList(item.name().toLowerCase(Locale.ROOT).split("\\s+")));
+
+                numMatching = numMatching(itemNameElts, processedCommandList);
+                if (numMatching > 0 && numMatching > curBest) {
+
+                    curBest = numMatching;
+                    bestMatch = item;
+                }
+
+            }
+            return bestMatch;
+        }
+        return null;
+    }
+
+    private static double determineDistanceToHero(int pos) {
+
+        int posX = pos % Dungeon.level.width();
+        int posY = pos % Dungeon.level.height();
+
+        int heroX = Dungeon.hero.pos % Dungeon.level.width();
+        int heroY = Dungeon.hero.pos % Dungeon.level.height();
+
+
+        double dist = Math.sqrt(Math.pow(posX - heroX, 2) + Math.pow(posY - heroY, 2));
+
+        return dist;
+    }
 
     private static int numMatching(ArrayList<String> tester, ArrayList<String> toCheck) {
 
@@ -576,6 +680,10 @@ public class CommandMapper {
         String relativePos = "";
         int heroPos = Dungeon.hero.pos;
 
+        if (heroPos == tile) {
+            return " below you ";
+        }
+
         if (tile <= heroPos - Dungeon.level.width()) {
             relativePos += "north";
         }
@@ -598,10 +706,7 @@ public class CommandMapper {
             if (possibleDirections.contains(word)) {
                 direction = word;
             }
-
-
         }
-
         return direction;
     }
 }

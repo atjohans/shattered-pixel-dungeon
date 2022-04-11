@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 
 
@@ -22,64 +23,75 @@ public class VoiceCommands {
 
         int targetPosition = checkAroundHelper(direction);
         if (targetPosition == -1) {
-            StateReader.speechEventHandler.setMsg("Terrain is impassable to the " + direction);
+            StateReader.speechEventHandler.setMsg("Terrain is impassable " + direction);
             return;
         }
         Dungeon.hero.curAction = new HeroAction.Move(targetPosition);
+
         lastCommand = Dungeon.hero.curAction;
         lastDirection = direction;
         lastPosition = null;
         lastTarget = null;
         Dungeon.hero.act();
-
         Dungeon.hero.next();
     }
 
+    public static void voiceLookTraps() {
 
+        for (int tile = 0; tile < Dungeon.level.map.length; tile++) {
+            if (Dungeon.hero.fieldOfView[tile]) {
+                System.out.println(Dungeon.level.tileName(tile));
+                if (Dungeon.level.map[tile] == Terrain.TRAP) {
+
+                    StateReader.speechEventHandler.setMsg(Dungeon.level.tileName(tile)  + CommandMapper.determineRelativePos(tile));
+                }
+            }
+        }
+    }
     public static void voiceLookPaths() {
 
 
-        if (checkAroundHelper("north") != -1) {
+        if (checkAroundHelper("north") != -1 ) {
 
-            StateReader.speechEventHandler.setMsg("Path to the north");
+            StateReader.speechEventHandler.setMsg("Path north");
 
         }
 
         if (checkAroundHelper("south") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the south");
+            StateReader.speechEventHandler.setMsg("Path south");
 
         }
         if (checkAroundHelper("west") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the west");
+            StateReader.speechEventHandler.setMsg("Path west");
 
         }
 
         if (checkAroundHelper("east") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the east");
+            StateReader.speechEventHandler.setMsg("Path east");
 
         }
 
         if (checkAroundHelper("northwest") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the northwest");
+            StateReader.speechEventHandler.setMsg("Path northwest");
 
         }
         if (checkAroundHelper("northeast") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the northeast");
+            StateReader.speechEventHandler.setMsg("Path northeast");
 
         }
         if (checkAroundHelper("southwest") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the southwest");
+            StateReader.speechEventHandler.setMsg("Path southwest");
 
         }
         if (checkAroundHelper("southeast") != -1) {
 
-            StateReader.speechEventHandler.setMsg("Path to the southeast");
+            StateReader.speechEventHandler.setMsg("Path southeast");
 
         }
     }
@@ -105,11 +117,11 @@ public class VoiceCommands {
                 System.out.println(Dungeon.level.tileName(tile));
                 if (Dungeon.level.map[tile] == Terrain.EXIT){
 
-                    StateReader.speechEventHandler.setMsg("Exit to the " + CommandMapper.determineRelativePos(tile));
+                    StateReader.speechEventHandler.setMsg("Exit " + CommandMapper.determineRelativePos(tile));
 
                 }else  if (Dungeon.level.map[tile] == Terrain.ENTRANCE){
 
-                    StateReader.speechEventHandler.setMsg("Entrance to the " + CommandMapper.determineRelativePos(tile));
+                    StateReader.speechEventHandler.setMsg("Entrance " + CommandMapper.determineRelativePos(tile));
 
                 }
             }
@@ -141,7 +153,7 @@ public class VoiceCommands {
                 if (Dungeon.level.map[i] == Terrain.LOCKED_DOOR){
                     response += "Locked ";
                 }
-                response += "Door to the " + CommandMapper.determineRelativePos(i);
+                response += "Door " + CommandMapper.determineRelativePos(i);
                 StateReader.speechEventHandler.setMsg(response);
                 hasDoor = true;
             }
@@ -155,6 +167,7 @@ public class VoiceCommands {
 
     public static void voiceReadScene() {
         voiceLookEnemies();
+        voiceLookTraps();
         voiceLookItems();
         voiceLookDoors();
         voiceLookRoom();
@@ -219,9 +232,13 @@ public class VoiceCommands {
         }
 
 
+        //allow players to step on traps
+        if (Dungeon.level.map[toCheck] == Terrain.TRAP){
+            lastValid = toCheck;
+            return lastValid;
+        }
 
-
-        if (Dungeon.level.passable[toCheck] && (Dungeon.level.visited[toCheck] || Dungeon.hero.fieldOfView[toCheck]) ){
+        if ((Dungeon.level.passable[toCheck]) && (Dungeon.level.visited[toCheck] || Dungeon.hero.fieldOfView[toCheck]) ){
             lastValid = toCheck;
         }
 

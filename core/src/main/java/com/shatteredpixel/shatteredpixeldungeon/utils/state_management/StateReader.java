@@ -33,22 +33,29 @@ public class StateReader {
 
     public static boolean busy = false;
 
-
     public static CommandMapper mapper = new CommandMapper();
+
+    public static String baseCommand = null;
 
     public static void handleCommand(String cmd) {
 
+        //Base Command system not the best way to handle differentiating between commands but works for now
+        System.out.println("Base Command: " + baseCommand);
 
-
-
-
-        mapper.mapCommand(cmd);
-
-
+        //if this is a brand new command
+        if (baseCommand == null) {
+            mapper.mapCommand(cmd);
+        }else{
+            //if we are supplying additional information to an existing command
+            mapper.mapCommand(baseCommand + " " +  cmd);
+            baseCommand = null;
+        }
     }
 
 
 }
+
+
 
 
 

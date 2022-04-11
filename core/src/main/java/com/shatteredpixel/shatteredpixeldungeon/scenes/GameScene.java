@@ -352,11 +352,17 @@ public class GameScene extends PixelScene {
 		pane.camera = uiCamera;
 		pane.setSize( uiCamera.width, 0 );
 		add( pane );
-		
+
 		toolbar = new Toolbar();
 		toolbar.camera = uiCamera;
-		toolbar.setRect( 0,uiCamera.height - toolbar.height(), uiCamera.width, toolbar.height() );
-		add( toolbar );
+		//remove interface in accessibility mode, need to keep around for GLog messages
+		if (!ShatteredPixelDungeon.isAccessibilityMode) {
+			toolbar.setRect(0, uiCamera.height - toolbar.height(), uiCamera.width, toolbar.height());
+			add(toolbar);
+		}
+
+
+
 		
 		attack = new AttackIndicator();
 		attack.camera = uiCamera;

@@ -144,6 +144,8 @@ public class textProcessor {
         synonymList.put("punch", "attack");
         synonymList.put("hit", "attack");
 
+        synonymList.put("cute", "shoot");
+        synonymList.put("ocean", "potion");
 
         synonymList.put("pickup", "grab");
         synonymList.put("get", "grab");

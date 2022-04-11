@@ -43,6 +43,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundlable;
@@ -141,7 +142,14 @@ public class Item implements Bundlable {
 
 	public void doThrow( Hero hero ) {
 
-		GameScene.selectCell(thrower);
+		if (ShatteredPixelDungeon.isAccessibilityMode) {
+			StateReader.speechEventHandler.setMsg("Specify a target");
+			StateReader.baseCommand = "throw " + this.name()  ;
+			StateReader.speechRecognitionHandler.dispatchListenEvent();
+		}
+		else {
+			GameScene.selectCell(thrower);
+		}
 
 	}
 

@@ -205,9 +205,10 @@ public class TitleScene extends PixelScene {
 			accessibleInterface.add((btnAccessible));
 			accessibleInterface.add(btnBadges);
 			accessibleInterface.add(btnPlay);
-			accessibleInterface.add(btnRankings);
 			accessibleInterface.add(btnSettings);
 
+			//TODO: Add support for the following buttons/windows
+			accessibleInterface.suppressButton(btnRankings);
 			accessibleInterface.suppressButton(btnChanges);
 			accessibleInterface.suppressButton(btnSupport);
 			accessibleInterface.suppressButton(btnAbout);

@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
@@ -54,6 +55,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.state_management.StateReader;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
@@ -115,6 +117,20 @@ public abstract class Wand extends Item {
 		}
 	}
 
+	//used to execute without cellSelector - for accessibility mode
+	public void execute(Hero hero, Char target, String action){
+
+		if (action.equals(AC_ZAP)){
+
+			curUser = hero;
+			curItem = this;
+			zapper.onSelect(target.pos);
+
+		}
+
+	}
+
+
 	@Override
 	public int targetingPos(Hero user, int dst) {
 		return new Ballistica( user.pos, dst, collisionProperties ).collisionPos;
@@ -159,6 +175,8 @@ public abstract class Wand extends Item {
 	}
 
 	public void gainCharge( float amt, boolean overcharge ){
+
+
 		partialCharge += amt;
 		while (partialCharge >= 1) {
 			if (overcharge) curCharges = Math.min(maxCharges+(int)amt, curCharges+1);
@@ -166,6 +184,11 @@ public abstract class Wand extends Item {
 			partialCharge--;
 			updateQuickslot();
 		}
+
+		if (ShatteredPixelDungeon.isAccessibilityMode)
+			StateReader.speechEventHandler.setMsg("Wand gained a charge, at: " + curCharges);
+
+
 	}
 	
 	public void charge( Char owner ) {
