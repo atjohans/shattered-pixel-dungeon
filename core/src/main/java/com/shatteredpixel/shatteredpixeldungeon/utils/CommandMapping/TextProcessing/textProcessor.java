@@ -11,7 +11,7 @@ import java.util.Locale;
 
 public class textProcessor {
 
-    final String[] StopWords = new String[]{"a", "all", "an", "and", "any", "are", "as", "at", "be", "been", "but", "by ", "few", "from", "for", "have", "he", "her", "here", "him", "his", "how", "i", "in", "is", "it", "its", "many", "me", "my", "none", "of", "on ", "or", "our", "she", "some", "the", "their", "them", "there", "they", "that ", "this", "to", "us", "was", "what", "when", "where", "which", "who", "why", "will", "with", "you", "your"};
+    final String[] StopWords = new String[]{"a", "an", "and", "any", "are", "as", "at", "be", "been", "but", "by ", "few", "from", "for", "have", "he", "her", "here", "him", "his", "how", "i", "in", "is", "it", "its", "many", "me", "my", "none", "of", "on ", "or", "our", "she", "some", "the", "their", "them", "there", "they", "that ", "this", "to", "us", "was", "what", "when", "where", "which", "who", "why", "will", "with", "you", "your"};
 
 
 

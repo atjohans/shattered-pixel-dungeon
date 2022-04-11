@@ -50,7 +50,6 @@ public class SpeechEventHandler implements StringChangeDispatcher {
             final StringChangeListener listener,
             final StringChangeEvent event) {
         listener.stateChanged(event);
-        System.out.println("OK");
     }
 
 

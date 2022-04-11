@@ -22,7 +22,9 @@ public class VoiceCommands {
     public static void voiceMoveInDirection(String direction) {
 
         int targetPosition = checkAroundHelper(direction);
-        if (targetPosition == -1) {
+        System.out.println(Dungeon.hero.pos);
+        System.out.println(targetPosition);
+        if (targetPosition == -1 ) {
             StateReader.speechEventHandler.setMsg("Terrain is impassable " + direction);
             return;
         }

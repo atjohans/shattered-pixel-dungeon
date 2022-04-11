@@ -252,16 +252,15 @@ public class CommandMapper {
 
                 //pobably a better way to do this than enumerating possible weapons
                 KindOfWeapon weapon = Dungeon.hero.belongings.weapon();
-                if (weapon instanceof MagesStaff){
+                if (weapon instanceof MagesStaff) {
 
                     if (((MagesStaff) weapon).getWand().curCharges > 0) {
                         ((MagesStaff) weapon).getWand().execute(Dungeon.hero, bestMatch, ((MagesStaff) weapon).getWand().defaultAction);
-                    }else{
+                    } else {
                         StateReader.speechEventHandler.setMsg("Staff Wand out of Charge");
                     }
-                }
-                else if (weapon instanceof SpiritBow){
-                    ((SpiritBow)weapon).execute(Dungeon.hero, bestMatch,weapon.defaultAction);
+                } else if (weapon instanceof SpiritBow) {
+                    ((SpiritBow) weapon).execute(Dungeon.hero, bestMatch, weapon.defaultAction);
                 }
             }
             return true;
@@ -281,6 +280,7 @@ public class CommandMapper {
                 StateReader.speechEventHandler.setMsg("No visible items");
                 return true;
             }
+
             Heap bestMatch = (Heap) bestMatching("heap", direction, processedCommandList);
             if (bestMatch == null) {
                 if (direction == null)
@@ -377,23 +377,39 @@ public class CommandMapper {
     private static boolean checkMoveCommand(ArrayList<String> processedCommandList) {
 
         String direction = getDirection(processedCommandList);
+        if (processedCommandList.contains("exit") || processedCommandList.contains("entrance")) {
 
-        if (processedCommandList.contains("exit") || processedCommandList.contains("entrance")){
-
-            for (int i = 0; i < Dungeon.level.map.length; ++i){
-
-
-                if (Dungeon.hero.fieldOfView[i] && (Dungeon.level.map[i] == Terrain.EXIT || Dungeon.level.map[i] == Terrain.ENTRANCE)){
+            for (int i = 0; i < Dungeon.level.map.length; ++i) {
+                if (Dungeon.hero.fieldOfView[i] && (Dungeon.level.map[i] == Terrain.EXIT || Dungeon.level.map[i] == Terrain.ENTRANCE)) {
 
                     Dungeon.hero.handle(i);
                     Dungeon.hero.act();
                     Dungeon.hero.next();
                     return true;
                 }
-
-
             }
+        } else if (processedCommandList.contains("door")) {
+            for (int i = 0; i < Dungeon.level.map.length; ++i) {
+                if (Dungeon.hero.fieldOfView[i] && (Dungeon.level.map[i] == Terrain.DOOR || Dungeon.level.map[i] == Terrain.LOCKED_DOOR || Dungeon.level.map[i] == Terrain.OPEN_DOOR)) {
+                    if (direction == null) {
+                        Dungeon.hero.handle(i);
+                        Dungeon.hero.act();
+                        Dungeon.hero.next();
 
+                        return true;
+                    } else {
+                        System.out.println(determineRelativePos(i));
+                        if (determineRelativePos(i).equals(direction)) {
+                            System.out.println("Door " + "direction");
+                            Dungeon.hero.handle(i);
+                            Dungeon.hero.act();
+                            Dungeon.hero.next();
+                            return true;
+                        }
+
+                    }
+                }
+            }
 
         }
 

@@ -119,8 +119,8 @@ public class CellSelector extends ScrollArea {
         if (ShatteredPixelDungeon.isAccessibilityMode) {
 
 
-            StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
-            if(StateReader.busy){
+            if(!dragging && StateReader.busy){
+                StateReader.speechEventHandler.setMsg(StateReader.speechEventStop);
                 StateReader.speechRecognitionHandler.dispatchKillEvent();
                 StateReader.busy= false;
             }else{
